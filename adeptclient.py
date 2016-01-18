@@ -25,7 +25,7 @@ class AdeptClient:
         try:
             self.s.sendall(msg)
             print 'Message sent'
-            time.sleep(0.1)
+            time.sleep(2)
         except:
             print 'Failed to send data'
             sys.exit()
