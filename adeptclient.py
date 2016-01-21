@@ -16,7 +16,8 @@ class AdeptClient:
         try:
             dest_pair = (host, port)
             self.s.connect(dest_pair)
-            print 'Socket connected to %s:%d' % dest_pair
+            self.t_conn = time.time()
+            print '[0]\tconn\t%s:%d' % dest_pair
         except:
             print 'Failed to connect'
             sys.exit()
@@ -24,11 +25,23 @@ class AdeptClient:
     def send_msg(self, msg):
         try:
             self.s.sendall(msg)
-            print 'Message sent'
-            time.sleep(2)
+            t_send = time.time() - self.t_conn
+            print '[%.3f]\tsend\t%s' % (t_send, msg)
+            
         except:
             print 'Failed to send data'
             sys.exit()
         
+        try: 
+            resp = self.s.recv(2048)
+            t_recv = time.time() - self.t_conn
+            print '[%.3f]\trecv\t%s' % (t_recv, resp.strip())
+        except:
+            print 'Failed to receive data'
+            sys.exit()
+        
     def close(self):    
         self.s.close()
+        
+    def __destr__(self):
+        self.close()
