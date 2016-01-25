@@ -1,8 +1,8 @@
 import socket
 import sys
 
-host = '172.16.120.134'
-port = 1234
+host = '172.16.0.125'
+port = 8888
 
 message = "Hello"
 

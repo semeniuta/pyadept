@@ -13,7 +13,7 @@ def callback(data):
     im = bridge.imgmsg_to_cv2(data, "mono8")
     print type(im)
 
-image_sub = rospy.Subscriber("/cam1/image_raw", Image, callback)
+image_sub = rospy.Subscriber("/cam1/camera/image_raw", Image, callback)
 
 rospy.init_node('rosim', anonymous=True)
 
