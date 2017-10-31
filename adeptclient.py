@@ -10,13 +10,13 @@ def log_conn(t, dest_pair):
     print(LOG_TEMPLATE_STR.format(t, 'conn', '{:s}:{:d}'.format(dest_pair)))
 
 def log_send(t, msg):
-    print(LOG_TEMPLATE_STR.format(t, 'send', msg)
+    print(LOG_TEMPLATE_STR.format(t, 'send', msg))
 
 def log_recv(t, msg):
-    print(LOG_TEMPLATE_STR.format(t, 'recv', resp.strip())
+    print(LOG_TEMPLATE_STR.format(t, 'recv', resp.strip()))
 
 def log_error(t, err):
-    print(LOG_TEMPLATE_STR.format(t, 'error', err)
+    print(LOG_TEMPLATE_STR.format(t, 'error', err))
 
 
 class AdeptClient:
@@ -61,7 +61,7 @@ class AdeptClient:
             try:
                 resp = self.s.recv(2048)
                 t_recv = time.time() - self.t_conn
-                print '[%.3f]\trecv\t%s' % (t_recv, resp.strip())
+                log_recv(t_recv, resp)
             except:
                 log_error(time.time(), 'Failed to receive data')
 
