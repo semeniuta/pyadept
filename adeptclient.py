@@ -69,5 +69,8 @@ class AdeptClient:
     def close(self):
         self.s.close()
 
-    def __destr__(self):
+    def __enter__(self):
+        return self
+
+    def __exit__(self):
         self.close()
