@@ -5,10 +5,12 @@ import socket
 import sys
 
 arg_parser = argparse.ArgumentParser(description='Launch echo server.')
-arg_parser.add_argument('--host', action='store_const', const='0.0.0.0')
-arg_parser.add_argument('--port', action='store_const', const=8888)
+arg_parser.add_argument('--host', default='0.0.0.0')
+arg_parser.add_argument('--port', default=1234, type=int)
 
-args = arg_parser.parse_args(['--host', '--port'])
+args = arg_parser.parse_args()
+
+print(args)
 
 def launch_server(host, port):
 

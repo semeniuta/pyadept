@@ -16,16 +16,18 @@ def send_msg(host, port, msg):
     try:
         dest_pair = (host, port)
         s.connect(dest_pair)
+        print('Connected to {}:{:d}'.format(host, port))
     except:
-        print('Failed to connect to {:s}:{:d}'.format(host, port))
+        print('Failed to connect to {}:{:d}'.format(host, port))
         sys.exit()
 
     try:
         data = msg.encode()
         s.sendall(data)
-        print('Message sent to {:s}:{:d}: {:s}'.format(host, port. data))
-    except:
+        print('Message sent to {}:{}: {}'.format(host, port, data))
+    except Exception  as e:
         print('Failed to send data')
+        print(e)
         sys.exit()
 
     s.close()
