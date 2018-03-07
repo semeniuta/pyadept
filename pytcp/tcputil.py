@@ -23,7 +23,7 @@ def start_server(srv_socket, handler, max_conn=10):
 
 
 def create_client_socket():
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    return socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 
 def create_connected_client_socket(remote_host, remote_port):
@@ -46,17 +46,19 @@ def socket_send_bytes(socket, buff):
     socket.sendall(buff)
 
 
-def read_until_char(socket, terminate_char=NEWLINE_CHAR, buffer_size=2048):
+def read_until_seq(socket, seq=NEWLINE_CHAR, buffer_size=2048, data=b''):
 
-    data = b''
-    do_read = True
+    chunk = socket.recv(buffer_size)
 
-    while do_read:
+    components = chunk.split(seq)
+    n = len(components)
 
-        rd = socket.recv(buffer_size)
-        data += rd
+    if n == 1:
+        data += chunk
+        return read_until_seq(socket, seq, buffer_size, data)
 
-        if rd[-1] == terminate_char:
-            do_read = False
+    elif n == 2:
+        return data + chunk
 
-    return data
+    else:
+        return [data + components[0]] + components[1:-1]
