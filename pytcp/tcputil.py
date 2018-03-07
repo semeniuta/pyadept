@@ -58,7 +58,7 @@ def read_until_seq(socket, seq=NEWLINE_CHAR, buffer_size=2048, data=b''):
         return read_until_seq(socket, seq, buffer_size, data)
 
     elif n == 2:
-        return data + chunk
+        return data + components[0]
 
     else:
         return [data + components[0]] + components[1:-1]
