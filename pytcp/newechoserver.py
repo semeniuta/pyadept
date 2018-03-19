@@ -10,6 +10,7 @@ def handle_command(conn, cmd):
     socket_send_bytes(conn, cmd)
 
     if cmd == STOP_REQUEST:
+        print('Closing connection')
         conn.close()
         session_on = False
 
@@ -21,13 +22,18 @@ def echo_handler(conn, addr):
     session_on = True
     while session_on:
 
-        data = read_until_seq(conn, seq=b'\r\n', buffer_size=128)
+        try:
+            data = read_until_seq(conn, seq=b'\r\n', buffer_size=128)
+        except ConnectionResetError as e:
+            print('Closing connection')
+            conn.close()
+            break
 
-        if type(data) is list:
-            for el in data:
-                session_on = handle_command(conn, el)
-        else:
-            session_on = handle_command(conn, data)
+        print('Data: ', data)
+        for el in data:
+            session_on = handle_command(conn, el)
+
+    print('Session finished')
 
 
 if __name__ == '__main__':

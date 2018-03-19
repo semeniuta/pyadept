@@ -1,7 +1,5 @@
 import socket
 
-NEWLINE_CHAR = b'\n'[0]
-
 def create_server_socket(host, port):
 
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -46,19 +44,20 @@ def socket_send_bytes(socket, buff):
     socket.sendall(buff)
 
 
-def read_until_seq(socket, seq=NEWLINE_CHAR, buffer_size=2048, data=b''):
+def read_until_seq(socket, seq=b'\n', buffer_size=2048, data=b''):
 
     chunk = socket.recv(buffer_size)
+    updated_data = data + chunk
 
-    components = chunk.split(seq)
+    components = updated_data.split(seq)
     n = len(components)
 
     if n == 1:
-        data += chunk
-        return read_until_seq(socket, seq, buffer_size, data)
-
-    elif n == 2:
-        return data + components[0]
+        return read_until_seq(socket, seq, buffer_size, updated_data)
 
     else:
-        return [data + components[0]] + components[1:-1]
+
+        if updated_data.endswith(seq):
+            return components[:-1]
+        else:
+            return components[:-1] + read_until_seq(socket, seq, buffer_size, components[-1])
