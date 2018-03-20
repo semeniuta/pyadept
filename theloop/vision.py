@@ -82,6 +82,7 @@ if __name__ == '__main__':
 
         try:
 
+            print('Waiting for request_event')
             request_event = q_in.get()
             images = grabber.grab(meta=False)
             q_images.put(images)
@@ -89,3 +90,4 @@ if __name__ == '__main__':
         except KeyboardInterrupt as e:
 
             rvs.stop(verbose=True)
+            break
