@@ -17,8 +17,13 @@ def start_server(srv_socket, handler, max_conn=10):
     srv_socket.listen(max_conn)
 
     while True:
-        conn, addr = srv_socket.accept()
-        handler(conn, addr)
+
+        try:
+            conn, addr = srv_socket.accept()
+            handler(conn, addr)
+        except KeyboardInterrupt:
+            print('\nStopping the server due to keyborard interrupt')
+            break
 
 
 def create_client_socket():
