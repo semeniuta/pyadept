@@ -1,4 +1,5 @@
 import socket
+import time
 
 def create_server_socket(host, port):
 
@@ -47,6 +48,10 @@ def socket_send_bytes(socket, buff):
 def read_until_seq(socket, seq=b'\n', buffer_size=2048, data=b''):
 
     chunk = socket.recv(buffer_size)
+
+    if not chunk: # peer has closed its socket
+        return None
+
     updated_data = data + chunk
 
     components = updated_data.split(seq)

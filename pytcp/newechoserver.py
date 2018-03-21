@@ -1,16 +1,17 @@
 from tcputil import create_server_socket, start_server, read_until_seq, socket_send_bytes
 
 STOP_REQUEST = b'stop'
+DELIMITER = b'\r\n'
 
 def handle_command(conn, cmd):
 
     session_on = True
 
     print("-> ", cmd)
-    socket_send_bytes(conn, cmd)
+    socket_send_bytes(conn, cmd + DELIMITER)
 
     if cmd == STOP_REQUEST:
-        print('Closing connection')
+        print('Closing connection (due to stop request)')
         conn.close()
         session_on = False
 
@@ -19,13 +20,20 @@ def handle_command(conn, cmd):
 
 def echo_handler(conn, addr):
 
+    print('Session started')
     session_on = True
     while session_on:
 
         try:
-            data = read_until_seq(conn, seq=b'\r\n', buffer_size=128)
+            print('Read start')
+            data = read_until_seq(conn, seq=DELIMITER, buffer_size=128)
         except ConnectionResetError as e:
-            print('Closing connection')
+            print('Closing connection (due to connection reset by peer)')
+            conn.close()
+            break
+
+        if data is None:
+            print("Closing connection (due to peer's closing its socket)")
             conn.close()
             break
 
