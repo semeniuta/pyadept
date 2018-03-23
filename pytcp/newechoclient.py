@@ -1,5 +1,5 @@
 import time
-from tcputil import create_connected_client_socket, socket_send_bytes
+from pytcp.tcputil import create_connected_client_socket, socket_send_bytes
 
 
 socket = create_connected_client_socket('127.0.0.1', 1234)

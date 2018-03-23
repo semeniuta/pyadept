@@ -1,5 +1,5 @@
 import numpy as np
-from pyadept.strbuild import vec_to_bytes
+from pyadept.strbuild import vec_to_str
 
 DELIMITER = b'\r\n'
 BREAK_CMD = b'break'
@@ -7,7 +7,7 @@ BREAK_CMD = b'break'
 
 def create_motion_command(template, vec, break_move=True):
 
-    vec_bytes = vec_to_bytes(vec)
+    vec_bytes = vec_to_str(vec)
 
     res = template.format(vec_bytes).encode() + DELIMITER
     if break_move:
