@@ -7,13 +7,14 @@ import time
 LOG_TEMPLATE_STR = '[{:.3f}]\t{:s}\t{:s}'
 
 def log_conn(t, dest_pair):
-    print(LOG_TEMPLATE_STR.format(t, 'conn', '{:s}:{:d}'.format(dest_pair)))
+    host, port = dest_pair
+    print(LOG_TEMPLATE_STR.format(t, 'conn', '{:s}:{:d}'.format(host, port)))
 
 def log_send(t, msg):
     print(LOG_TEMPLATE_STR.format(t, 'send', msg))
 
 def log_recv(t, msg):
-    print(LOG_TEMPLATE_STR.format(t, 'recv', resp.strip()))
+    print(LOG_TEMPLATE_STR.format(t, 'recv', msg.strip()))
 
 def log_error(t, err):
     print(LOG_TEMPLATE_STR.format(t, 'error', err))
@@ -36,7 +37,7 @@ class AdeptClient:
             dest_pair = (host, port)
             self.s.connect(dest_pair)
             self.t_conn = time.time()
-            log_connected(0, dest_pair)
+            log_conn(0, dest_pair)
         except:
             print('Failed to connect to')
             sys.exit()
