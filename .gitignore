@@ -4,3 +4,4 @@
 *.png
 *build*
 *.ipynb_checkpoints*
+.idea*
