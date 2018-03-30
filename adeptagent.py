@@ -60,10 +60,3 @@ class AdeptAgent:
 
     def get_tool(self, tool_id):
         self.client.send_msg("get_tool:{:d}".format(tool_id))
-
-if __name__ == '__main__':
-    import config
-    host = config.controller_ip
-    port = config.controller_port
-    a = AdeptAgent(host, port)
-    a.connect()
