@@ -40,7 +40,7 @@ class QHandler(Thread):
             if request == self._stop_const:
                 break
 
-            response = self._hander()
+            response = self._hander(request)
 
             self._q_out.put(response)
 

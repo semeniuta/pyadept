@@ -1,5 +1,5 @@
 import socket
-import time
+
 
 def create_server_socket(host, port):
 
@@ -12,7 +12,7 @@ def create_server_socket(host, port):
     return s
 
 
-def start_server(srv_socket, handler, max_conn=10):
+def start_server(srv_socket, on_accept, on_exit=None, max_conn=10):
 
     srv_socket.listen(max_conn)
 
@@ -20,9 +20,11 @@ def start_server(srv_socket, handler, max_conn=10):
 
         try:
             conn, addr = srv_socket.accept()
-            handler(conn, addr)
+            on_accept(conn, addr)
         except KeyboardInterrupt:
             print('\nStopping the server due to keyborard interrupt')
+            if on_exit is not None:
+                on_exit()
             break
 
 
