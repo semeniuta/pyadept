@@ -1,5 +1,5 @@
 import time
-from pytcp.tcputil import create_client_socket, socket_send_bytes, read_until_seq
+from pytcp.tcputil import create_client_socket, socket_send_bytes, read_complete_messages
 from pyadept.commands import DELIMITER
 
 LOG_TEMPLATE_STR = '[{:.3f}]\t{:s}\t{:s}'
@@ -60,7 +60,7 @@ class RobotSession(object):
 
     def receive(self):
 
-        resp_messages = read_until_seq(self._socket, DELIMITER, buffer_size=2048, data=b'')
+        resp_messages = read_complete_messages(self._socket, DELIMITER, buffer_size=2048)
         return resp_messages
 
 
