@@ -118,26 +118,3 @@ def read_complete_messages(socket, delimiter=b'\n', buffer_size=2048):
         return messages + perform_read(rest)
 
     return perform_read()
-
-
-def read_until_seq(socket, seq=b'\n', buffer_size=2048, data=b''):
-
-    chunk = socket.recv(buffer_size)
-
-    if not chunk: # peer has closed its socket
-        return None
-
-    updated_data = data + chunk
-
-    components = updated_data.split(seq)
-    n = len(components)
-
-    if n == 1:
-        return read_until_seq(socket, seq, buffer_size, updated_data)
-
-    else:
-
-        if updated_data.endswith(seq):
-            return components[:-1]
-        else:
-            return components[:-1] + read_until_seq(socket, seq, buffer_size, components[-1])

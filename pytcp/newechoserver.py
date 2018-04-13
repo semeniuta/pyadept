@@ -1,4 +1,4 @@
-from pytcp.tcputil import create_server_socket, start_server, read_until_seq, socket_send_bytes
+from pytcp.tcputil import create_server_socket, start_server, read_complete_messages, socket_send_bytes
 
 STOP_REQUEST = b'stop'
 DELIMITER = b'\r\n'
@@ -26,7 +26,7 @@ def echo_handler(conn, addr):
 
         try:
             print('Read start')
-            data = read_until_seq(conn, seq=DELIMITER, buffer_size=128)
+            data = read_complete_messages(conn, delimiter=DELIMITER, buffer_size=128)
         except ConnectionResetError as e:
             print('Closing connection (due to connection reset by peer)')
             conn.close()
