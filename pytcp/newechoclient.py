@@ -21,7 +21,10 @@ if __name__ == '__main__':
     socket_send_bytes(socket, b'hello\r\n')
     time.sleep(args.sleep)
 
-    socket_send_bytes(socket, b'hello again\r\n')
+    socket_send_bytes(socket, b'hello again') # <- no delimiter
+    time.sleep(args.sleep)
+
+    socket_send_bytes(socket, b', and one more time\r\n')
     time.sleep(args.sleep)
 
     socket_send_bytes(socket, b'one\r\ntwo\r\nthree\r\nfour\r\nfive\r\n')
