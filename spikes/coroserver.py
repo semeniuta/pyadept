@@ -1,50 +1,53 @@
 import asyncio
 import time
+import functools
+
+from pyasync.bytesproc import split_data
+from pyasync.protocols import GenericProtocol
 
 
 DELIMITER = b'\r\n'
 
 
-class EchoServerProtocol(asyncio.Protocol):
-
-    def __init__(self):
-        self._rest = b''
+class EchoServerProtocol(GenericProtocol):
 
     def connection_made(self, transport):
 
-        self._t0 = time.time()
         self._transport = transport
 
         endpoint = self._transport.get_extra_info('peername')
-        print(self._current_time(), 'Connected with', endpoint)
+        self._log('Connected with: {}'.format(endpoint))
 
     def data_received(self, data):
-
-        print(self._current_time(), 'Received', data)
+        self._log('Received: {}'.format(data))
 
         all_data = self._merge_data_with_rest(data)
-        messages = all_data.split(DELIMITER)
+        commands, rest = split_data(all_data, DELIMITER)
 
-        for m in messages:
-            self._transport.write(data)
+        if commands is not None:
+            for command in commands:
+
+                command_id = command.split(b':')[0]
+                print(command.split(b':'))
+                msg_back = command_id + b':done' + DELIMITER
+
+                self._transport.write(msg_back)
+                self._log('Sent back: {}'.format(msg_back))
+
+        if rest is not None:
+            self._update_rest(rest)
+
 
     def connection_lost(self, error):
-        print(self._current_time(), 'Connection lost:', str(error))
-
-    def _current_time(self):
-        return '{:.3f}'.format(time.time() - self._t0)
-
-    def _merge_data_with_rest(self, data):
-
-        all_data = self._rest  + data
-        self._rest = b''
-        return all_data
+        self._log('Connection lost: {}'.format(str(error)))
 
 
 if __name__ == '__main__':
 
     loop = asyncio.get_event_loop()
-    server_coro = loop.create_server(EchoServerProtocol, '', 1234)
+
+    server_factory = functools.partial(EchoServerProtocol, loop=loop)
+    server_coro = loop.create_server(server_factory, '', 1234)
     server = loop.run_until_complete(server_coro)
 
     try:
