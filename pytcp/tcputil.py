@@ -1,5 +1,7 @@
 import socket
 
+from pyasync.bytesproc import split_data
+
 
 def create_server_socket(host, port):
 
@@ -72,21 +74,7 @@ def read_messages(socket, delimiter=b'\n', buffer_size=2048):
 
     data = socket.recv(buffer_size)
 
-    if not data:
-        return None, None
-
-    messages = data.split(delimiter)
-    n = len(messages)
-
-    if n == 1:
-        return None, data
-
-    else:
-
-        if data.endswith(delimiter):
-            return messages[:-1], None
-        else:
-            return messages[:-1], messages[-1]
+    return split_data(data)
 
 
 def read_complete_messages(socket, delimiter=b'\n', buffer_size=2048):
