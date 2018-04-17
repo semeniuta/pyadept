@@ -1,9 +1,8 @@
 import asyncio
-import time
 import functools
 
-from pyasync.bytesproc import split_data
-from pyasync.protocols import GenericProtocol
+from pyadept.bytesproc import split_data
+from pyadept.asioutil import GenericProtocol
 
 
 DELIMITER = b'\r\n'
@@ -28,7 +27,6 @@ class EchoServerProtocol(GenericProtocol):
             for command in commands:
 
                 command_id = command.split(b':')[0]
-                print(command.split(b':'))
                 msg_back = command_id + b':done' + DELIMITER
 
                 self._transport.write(msg_back)

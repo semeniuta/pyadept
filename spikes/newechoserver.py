@@ -1,4 +1,4 @@
-from pytcp.tcputil import create_server_socket, start_server, read_complete_messages, socket_send_bytes
+from pyadept.tcputil import create_server_socket, start_server, read_complete_messages, socket_send_bytes
 
 STOP_REQUEST = b'stop'
 DELIMITER = b'\r\n'

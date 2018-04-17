@@ -2,8 +2,8 @@ import asyncio
 import functools
 import uuid
 
-from pyasync.bytesproc import split_data
-from pyasync.protocols import GenericProtocol
+from pyadept.bytesproc import split_data
+from pyadept.asioutil import GenericProtocol
 
 
 DELIMITER = b'\r\n'

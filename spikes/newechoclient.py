@@ -3,7 +3,7 @@ import os
 sys.path.append(os.getcwd())
 
 import time
-from pytcp.tcputil import create_connected_client_socket, socket_send_bytes
+from pyadept.tcputil import create_connected_client_socket, socket_send_bytes
 import argparse
 
 if __name__ == '__main__':

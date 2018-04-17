@@ -1,6 +1,6 @@
 import socket
 
-from pyasync.bytesproc import split_data
+from pyadept.bytesproc import split_data
 
 
 def create_server_socket(host, port):
