@@ -2,7 +2,7 @@ import asyncio
 import functools
 import uuid
 
-from pyadept.bytesproc import split_data
+from pyadept.strutil import split_data
 from pyadept.asioutil import GenericProtocol
 
 

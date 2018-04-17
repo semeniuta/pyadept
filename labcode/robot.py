@@ -1,5 +1,5 @@
 import numpy as np
-from pyadept.commands import MoveRelWorld
+from pyadept.rcommands import MoveRelWorld
 from pyadept.rsession import RobotSession
 
 ROBOT_HOST = '172.16.120.64'

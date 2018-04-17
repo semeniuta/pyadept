@@ -4,6 +4,7 @@ import asyncio
 class GenericProtocol(asyncio.Protocol):
 
     def __init__(self, loop):
+
         self._loop = loop
         self._t0 = self._loop.time()
         self._rest = b''

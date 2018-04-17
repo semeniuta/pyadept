@@ -1,6 +1,6 @@
 import time
 from pyadept.tcputil import create_client_socket, socket_send_bytes, read_complete_messages
-from pyadept.commands import DELIMITER
+from pyadept.rcommands import DELIMITER
 
 LOG_TEMPLATE_STR = '[{:.3f}]\t{:s}\t{:s}'
 

@@ -1,5 +1,5 @@
 import numpy as np
-from pyadept.strbuild import vec_to_str
+from pyadept.strutil import vec_to_str
 
 DELIMITER = b'\r\n'
 BREAK_CMD = b'break'

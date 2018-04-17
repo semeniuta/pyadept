@@ -1,7 +1,7 @@
 import asyncio
 import functools
 
-from pyadept.bytesproc import split_data
+from pyadept.strutil import split_data
 from pyadept.asioutil import GenericProtocol
 
 
@@ -18,6 +18,7 @@ class EchoServerProtocol(GenericProtocol):
         self._log('Connected with: {}'.format(endpoint))
 
     def data_received(self, data):
+
         self._log('Received: {}'.format(data))
 
         all_data = self._merge_data_with_rest(data)
