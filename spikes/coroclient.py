@@ -2,15 +2,11 @@ import asyncio
 import functools
 import uuid
 
-from pyadept.strutil import split_data
+from pyadept.strutil import split_data, generate_id_bytes
 from pyadept.asioutil import GenericProtocol
 
 
 DELIMITER = b'\r\n'
-
-
-def generate_id():
-    return str(uuid.uuid4())[:8].encode()
 
 
 def create_command(request_id, msg):
@@ -36,7 +32,7 @@ class EchoClientProtocol(GenericProtocol):
         for msg in self._messages:
             for command in msg.split(DELIMITER):
 
-                command_id = generate_id()
+                command_id = generate_id_bytes()
                 command_data = create_command(command_id, command)
 
                 self._transport.write(command_data)

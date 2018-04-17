@@ -1,6 +1,22 @@
 import asyncio
 
 
+def run_server(server_factory, loop, host, port):
+
+    server_coro = loop.create_server(server_factory, host, port)
+
+    server = loop.run_until_complete(server_coro)
+
+    try:
+        loop.run_forever()
+    except KeyboardInterrupt:
+        print('Stopping the server due to keyboard interrupt')
+    finally:
+        server.close()
+        loop.run_until_complete(server.wait_closed())
+        loop.close()
+
+
 class GenericProtocol(asyncio.Protocol):
 
     def __init__(self, loop):

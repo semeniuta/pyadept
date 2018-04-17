@@ -3,6 +3,17 @@ Utilities for creation and processing
 of strings and bytes sequences
 '''
 
+import uuid
+
+
+def generate_id_str():
+    return str(uuid.uuid4())[:8]
+
+
+def generate_id_bytes():
+    return generate_id_str().encode()
+
+
 def vec_to_str(vec):
 
     size = len(vec)

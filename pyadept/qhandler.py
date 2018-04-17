@@ -1,10 +1,7 @@
 from threading import Thread
 from queue import Queue
-import uuid
 
-
-def generate_unique_id():
-    return str(uuid.uuid4())[:8]
+from pyadept.strutil import generate_id_str
 
 
 class QHandler(Thread):
@@ -16,7 +13,7 @@ class QHandler(Thread):
         self._q_in = Queue() if q_in is None else q_in
         self._q_out = Queue() if q_out is None else q_out
 
-        self._stop_const = generate_unique_id()
+        self._stop_const = generate_id_str()
 
         super(QHandler, self).__init__(target=self._loop)
 
