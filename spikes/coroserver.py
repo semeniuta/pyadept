@@ -2,25 +2,8 @@ import asyncio
 import functools
 
 from pyadept.strutil import split_data
-from pyadept.asioutil import GenericProtocol, create_server
-
-
-DELIMITER = b'\r\n'
-
-
-def create_tick(loop):
-
-    future_server_closed = loop.create_future()
-
-    async def tick(interval, t0):
-
-        while not future_server_closed.done():
-            await asyncio.sleep(interval)
-            now = loop.time()
-            print('t={:.3f}'.format(now - t0))
-
-    return future_server_closed, tick
-
+from pyadept.asioutil import GenericProtocol, create_server, create_periodic_task
+from pyadept.rcommands import DELIMITER
 
 class EchoServerProtocol(GenericProtocol):
 
@@ -62,10 +45,13 @@ if __name__ == '__main__':
     server_factory = functools.partial(EchoServerProtocol, loop=loop)
     server = create_server(server_factory, loop, '', 1234)
 
-    future_server_closed, tick = create_tick(loop)
-    future_tick = asyncio.ensure_future(
-        tick(interval=0.1, t0=loop.time())
+    t0 = loop.time()
+    future_server_closed, tick = create_periodic_task(
+        loop,
+        lambda: print( 't={:.3f}'.format(loop.time() - t0) )
     )
+
+    future_tick = asyncio.ensure_future( tick(interval=0.1) )
 
     try:
         loop.run_forever()

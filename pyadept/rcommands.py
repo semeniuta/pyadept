@@ -2,24 +2,25 @@ import numpy as np
 from pyadept.strutil import vec_to_str
 
 DELIMITER = b'\r\n'
-BREAK_CMD = b'break'
+BREAK_CMD = b'break' + DELIMITER
 
 
 def create_motion_command(template, vec, break_move=True):
 
     vec_bytes = vec_to_str(vec)
 
-    res = template.format(vec_bytes).encode() + DELIMITER
-    if break_move:
-        res += (BREAK_CMD + DELIMITER)
+    cmd_bytes = template.format(vec_bytes).encode() + DELIMITER
 
-    return res
+    if break_move:
+        return cmd_bytes, BREAK_CMD
+
+    return cmd_bytes
 
 
 class RobotCommand(object):
 
     def get_bytes(self):
-        return DELIMITER
+        return DELIMITER,
 
 
 class DirectCommand(RobotCommand):
@@ -28,7 +29,7 @@ class DirectCommand(RobotCommand):
         self._cmd = cmd
 
     def get_bytes(self):
-        return self._cmd.encode() + DELIMITER
+        return self._cmd.encode() + DELIMITER,
 
 
 class MotionCommand(RobotCommand):
