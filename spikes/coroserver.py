@@ -8,6 +8,14 @@ from pyadept.asioutil import GenericProtocol
 DELIMITER = b'\r\n'
 
 
+async def tick(loop, interval, future, t0):
+
+    while not future.done():
+        await asyncio.sleep(interval)
+        now = loop.time()
+        print('t={:.3f}'.format(now - t0))
+
+
 class EchoServerProtocol(GenericProtocol):
 
     def connection_made(self, transport):
@@ -49,6 +57,12 @@ if __name__ == '__main__':
     server_coro = loop.create_server(server_factory, '', 1234)
     server = loop.run_until_complete(server_coro)
 
+    f = loop.create_future()
+
+    tick_future = asyncio.ensure_future(
+        tick(loop, interval=0.1, future=f, t0=loop.time())
+    )
+
     try:
         loop.run_forever()
     except KeyboardInterrupt:
@@ -56,4 +70,6 @@ if __name__ == '__main__':
     finally:
         server.close()
         loop.run_until_complete(server.wait_closed())
+        f.set_result(True)
+        loop.run_until_complete(tick_future)
         loop.close()
