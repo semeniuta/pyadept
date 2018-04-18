@@ -2,18 +2,24 @@ import asyncio
 import functools
 
 from pyadept.strutil import split_data
-from pyadept.asioutil import GenericProtocol
+from pyadept.asioutil import GenericProtocol, create_server
 
 
 DELIMITER = b'\r\n'
 
 
-async def tick(loop, interval, future, t0):
+def create_tick(loop):
 
-    while not future.done():
-        await asyncio.sleep(interval)
-        now = loop.time()
-        print('t={:.3f}'.format(now - t0))
+    future_server_closed = loop.create_future()
+
+    async def tick(interval, t0):
+
+        while not future_server_closed.done():
+            await asyncio.sleep(interval)
+            now = loop.time()
+            print('t={:.3f}'.format(now - t0))
+
+    return future_server_closed, tick
 
 
 class EchoServerProtocol(GenericProtocol):
@@ -54,13 +60,11 @@ if __name__ == '__main__':
     loop = asyncio.get_event_loop()
 
     server_factory = functools.partial(EchoServerProtocol, loop=loop)
-    server_coro = loop.create_server(server_factory, '', 1234)
-    server = loop.run_until_complete(server_coro)
+    server = create_server(server_factory, loop, '', 1234)
 
-    f = loop.create_future()
-
-    tick_future = asyncio.ensure_future(
-        tick(loop, interval=0.1, future=f, t0=loop.time())
+    future_server_closed, tick = create_tick(loop)
+    future_tick = asyncio.ensure_future(
+        tick(interval=0.1, t0=loop.time())
     )
 
     try:
@@ -70,6 +74,6 @@ if __name__ == '__main__':
     finally:
         server.close()
         loop.run_until_complete(server.wait_closed())
-        f.set_result(True)
-        loop.run_until_complete(tick_future)
+        future_server_closed.set_result(True)
+        loop.run_until_complete(future_tick)
         loop.close()
