@@ -43,40 +43,54 @@ async def client_coro(host, port, commands):
     for cmd in commands:
 
         for cmd_bytes in cmd.get_bytes():
+
             cmd_id = generate_id_bytes()
             cmd_data = add_id(cmd_id, cmd_bytes)
 
             writer.write(cmd_data)
             ids.add(cmd_id)
 
-    await writer.drain()
+            print('Sent:', cmd_data)
 
-    memory = b''
-
-    while len(ids) > 0:
-        data = await reader.read(32)
-
-        if data:
-
-            all_data = memory + data
-            memory = b''
-
-            messages, rest = split_data(all_data, DELIMITER)
-            print(messages, rest)
-
-            if messages is not None:
-                for msg in messages:
-                    msg_id, status = interpret_robot_response(msg)
-                    ids.remove(msg_id)
-
-            if rest is not None:
-                memory = rest
-
-        else:
+        try:
+            await read_all_responses(reader, ids, 32)
+        except ServerClosedWhileReading:
             writer.close()
             return
 
-        print('Received all')
+    await writer.drain()
+
+
+async def read_all_responses(reader, ids_set, buffer_size=1024):
+
+    memory = b''
+
+    while len(ids_set) > 0:
+
+        data = await reader.read(buffer_size)
+
+        if not data:
+            raise ServerClosedWhileReading
+
+        all_data = memory + data
+        memory = b''
+
+        messages, rest = split_data(all_data, DELIMITER)
+        print('messages={}, rest={}'.format(messages, rest))
+
+        if messages is not None:
+            for msg in messages:
+                msg_id, status = interpret_robot_response(msg)
+                ids_set.remove(msg_id)
+
+        if rest is not None:
+            memory = rest
+
+    print('Received all')
+
+
+class ServerClosedWhileReading(Exception):
+    pass
 
 
 class MCNClientProtocol(GenericProtocol):
