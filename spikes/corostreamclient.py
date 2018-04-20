@@ -1,12 +1,17 @@
 import asyncio
 import itertools
-import functools
+import argparse
 
 from pyadept.rprotocol import client_coro
 from pyadept import rcommands
 
 
 if __name__ == '__main__':
+
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument('--host', default='127.0.0.1')
+    arg_parser.add_argument('--port', default=1234)
+    args = arg_parser.parse_args()
 
     commands = [
         rcommands.DirectCommand('move_home'),
@@ -19,7 +24,7 @@ if __name__ == '__main__':
 
     commands_cycle = itertools.cycle(commands)
 
-    client_coro = client_coro('127.0.0.1', 1234, commands)
+    client_coro = client_coro(args.host, args.port, commands)
 
     try:
         loop.run_until_complete(client_coro)
