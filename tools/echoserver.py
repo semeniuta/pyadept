@@ -1,7 +1,12 @@
+import sys
+import os
+import argparse
+sys.path.append(os.getcwd())
+
 from pyadept.tcputil import create_server_socket, start_server, read_complete_messages, socket_send_bytes
+from pyadept.rprotocol import DELIMITER
 
 STOP_REQUEST = b'stop'
-DELIMITER = b'\r\n'
 
 def handle_command(conn, cmd):
 
@@ -20,15 +25,16 @@ def handle_command(conn, cmd):
 
 def echo_handler(conn, addr):
 
-    print('Session started')
+    client_host, client_port = addr
+
+    print('Session started (connected with {}:{:d})'.format(client_host, client_port))
     session_on = True
     while session_on:
 
         try:
-            print('Read start')
             data = read_complete_messages(conn, delimiter=DELIMITER, buffer_size=128)
         except ConnectionResetError as e:
-            print('Closing connection (due to connection reset by peer)')
+            print('Closing connection (due to connection being reset by peer)')
             conn.close()
             break
 
@@ -37,7 +43,7 @@ def echo_handler(conn, addr):
             conn.close()
             break
 
-        print('Data: ', data)
+        print('Read data: ', data)
         for el in data:
             session_on = handle_command(conn, el)
 
@@ -46,5 +52,12 @@ def echo_handler(conn, addr):
 
 if __name__ == '__main__':
 
-    srv_socket = create_server_socket('0.0.0.0', 1234)
+    arg_parser = argparse.ArgumentParser(description='Start a TCP echo server')
+    arg_parser.add_argument('--host', default='0.0.0.0')
+    arg_parser.add_argument('--port', default=1234)
+    args = arg_parser.parse_args()
+
+    print('Starting TCP echo server at {}:{:d}'.format(args.host, args.port))
+
+    srv_socket = create_server_socket(args.host, args.port)
     start_server(srv_socket, echo_handler)
