@@ -2,7 +2,7 @@ import asyncio
 import itertools
 import functools
 
-from pyadept.rprotocol import create_robot_client_from_protocol, MCNClientProtocol
+from pyadept.rprotocol import client_coro
 from pyadept import rcommands
 
 
@@ -19,11 +19,10 @@ if __name__ == '__main__':
 
     commands_cycle = itertools.cycle(commands)
 
-    client_coro, client_completed, stop_event = create_robot_client_from_protocol(loop, commands, '127.0.0.1', 1234)
+    client_coro = client_coro('127.0.0.1', 1234, commands)
 
     try:
         loop.run_until_complete(client_coro)
-        loop.run_until_complete(client_completed)
     except KeyboardInterrupt:
         print('Stopping the robot client due to keyboard interrupt')
     finally:

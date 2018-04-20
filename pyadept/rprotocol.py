@@ -16,7 +16,7 @@ def add_id(request_id, msg):
     return request_id + b':' + msg
 
 
-def create_robot_client(loop, commands, host, port):
+def create_robot_client_from_protocol(loop, commands, host, port):
 
     f_completed = loop.create_future()
     stop_event = asyncio.Event()
@@ -24,7 +24,7 @@ def create_robot_client(loop, commands, host, port):
     client_factory = functools.partial(
         MCNClientProtocol,
         loop=loop,
-        cmd_iterator=commands,
+        commands=commands,
         future_session_completed=f_completed,
         stop_event=stop_event
     )
@@ -34,15 +34,60 @@ def create_robot_client(loop, commands, host, port):
     return client_coro, f_completed, stop_event
 
 
+async def client_coro(host, port, commands):
+
+    reader, writer = await asyncio.open_connection(host, port)
+
+    ids = set()
+
+    for cmd in commands:
+
+        for cmd_bytes in cmd.get_bytes():
+            cmd_id = generate_id_bytes()
+            cmd_data = add_id(cmd_id, cmd_bytes)
+
+            writer.write(cmd_data)
+            ids.add(cmd_id)
+
+    await writer.drain()
+
+    memory = b''
+
+    while len(ids) > 0:
+        data = await reader.read(32)
+
+        if data:
+
+            all_data = memory + data
+            memory = b''
+
+            messages, rest = split_data(all_data, DELIMITER)
+            print(messages, rest)
+
+            if messages is not None:
+                for msg in messages:
+                    msg_id, status = interpret_robot_response(msg)
+                    ids.remove(msg_id)
+
+            if rest is not None:
+                memory = rest
+
+        else:
+            writer.close()
+            return
+
+        print('Received all')
+
+
 class MCNClientProtocol(GenericProtocol):
     """
     Master Control Node TCP Client Protocol
     """
 
-    def __init__(self, loop, cmd_iterator, future_session_completed, stop_event):
+    def __init__(self, loop, commands, future_session_completed, stop_event):
 
         super(MCNClientProtocol, self).__init__(loop)
-        self._cmd_iterator = cmd_iterator
+        self._commands = commands
         self._future_session_completed = future_session_completed
         self._stop_event = stop_event # <- not yet used
 
@@ -54,7 +99,7 @@ class MCNClientProtocol(GenericProtocol):
         endpoint = self._transport.get_extra_info('peername')
         self._log('Connected with: {}'.format(endpoint))
 
-        for command in self._cmd_iterator:
+        for command in self._commands:
 
             for cmd_bytes in command.get_bytes():
 
