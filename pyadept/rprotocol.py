@@ -8,8 +8,12 @@ from pyadept.rcommands import DELIMITER
 
 def interpret_robot_response(msg):
 
-    msg_id, status = msg.split(b':')
-    return msg_id, status
+    elements = msg.split(b':')
+
+    msg_id, status, timestamp = elements[:3]
+    tail = elements[3:]
+
+    return msg_id, status, timestamp, tail
 
 
 def add_id(request_id, msg):
@@ -34,7 +38,7 @@ def create_robot_client_from_protocol(loop, commands, host, port):
     return client_coro, f_completed, stop_event
 
 
-async def client_coro(host, port, commands):
+async def client_coro(host, port, commands, wait_t=None):
 
     reader, writer = await asyncio.open_connection(host, port)
 
@@ -51,6 +55,9 @@ async def client_coro(host, port, commands):
             ids.add(cmd_id)
 
             print('Sent:', cmd_data)
+
+        if wait_t is not None:
+            await asyncio.sleep(wait_t)
 
         try:
             await read_all_responses(reader, ids, 32)
@@ -80,7 +87,7 @@ async def read_all_responses(reader, ids_set, buffer_size=1024):
 
         if messages is not None:
             for msg in messages:
-                msg_id, status = interpret_robot_response(msg)
+                msg_id, status, timestamp, tail = interpret_robot_response(msg)
                 ids_set.remove(msg_id)
 
         if rest is not None:
