@@ -6,7 +6,7 @@ import asyncio
 import itertools
 import argparse
 
-from pyadept.rprotocol import client_coro
+from pyadept import rprotocol
 from pyadept import rcommands
 
 
@@ -30,7 +30,12 @@ if __name__ == '__main__':
 
     commands_cycle = itertools.cycle(commands)
 
-    client_coro = client_coro(args.host, args.port, commands, buffer_size=args.buffersize, wait_t=args.sleep)
+    client_coro = rprotocol.client_coro(
+        args.host,
+        args.port, commands,
+        buffer_size=args.buffersize,
+        wait_t=args.sleep
+    )
 
     try:
         loop.run_until_complete(client_coro)

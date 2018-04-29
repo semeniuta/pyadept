@@ -16,6 +16,8 @@ class EchoServerProtocol(GenericProtocol):
 
     def data_received(self, data):
 
+        t0 = self._current_time()
+
         self._log('Received: {}'.format(data))
 
         all_data = self._merge_data_with_rest(data)
@@ -25,7 +27,9 @@ class EchoServerProtocol(GenericProtocol):
             for command in commands:
 
                 command_id = command.split(b':')[0]
-                msg_back = command_id + b':done' + DELIMITER
+
+                t1 = self._current_time()
+                msg_back = command_id + b':done:' + '{:.3f},{:.3f}'.format(t0, t1).encode() + DELIMITER
 
                 self._transport.write(msg_back)
                 self._log('Sent back: {}'.format(msg_back))
