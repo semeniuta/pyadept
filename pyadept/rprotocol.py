@@ -38,7 +38,7 @@ def create_robot_client_from_protocol(loop, commands, host, port):
     return client_coro, f_completed, stop_event
 
 
-async def client_coro(host, port, commands, wait_t=None):
+async def client_coro(host, port, commands, buffer_size=1024, wait_t=None):
 
     reader, writer = await asyncio.open_connection(host, port)
 
@@ -60,7 +60,7 @@ async def client_coro(host, port, commands, wait_t=None):
             await asyncio.sleep(wait_t)
 
         try:
-            await read_all_responses(reader, ids, 32)
+            await read_all_responses(reader, ids, buffer_size)
         except ServerClosedWhileReading:
             writer.close()
             return

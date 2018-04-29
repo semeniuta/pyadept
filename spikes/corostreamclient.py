@@ -16,6 +16,7 @@ if __name__ == '__main__':
     arg_parser.add_argument('--host', default='127.0.0.1')
     arg_parser.add_argument('--port', default=1234)
     arg_parser.add_argument('--sleep', type=float, default=0.)
+    arg_parser.add_argument('--buffersize', type=int, default=32)
     args = arg_parser.parse_args()
 
     commands = [
@@ -29,7 +30,7 @@ if __name__ == '__main__':
 
     commands_cycle = itertools.cycle(commands)
 
-    client_coro = client_coro(args.host, args.port, commands, wait_t=args.sleep)
+    client_coro = client_coro(args.host, args.port, commands, buffer_size=args.buffersize, wait_t=args.sleep)
 
     try:
         loop.run_until_complete(client_coro)
