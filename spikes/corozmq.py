@@ -29,7 +29,7 @@ if __name__ == '__main__':
         loop=loop
     )
 
-    task_subscriber = asynczmq.zmq_subscribe(
+    task_subscriber = asynczmq.zmq_sub_listener(
         'tcp://127.0.0.1:1235',
         stop_event=stop_ticking
     )
