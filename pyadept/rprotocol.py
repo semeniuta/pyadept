@@ -1,4 +1,3 @@
-import functools
 import asyncio
 
 from pyadept.strutil import split_data, generate_id_bytes

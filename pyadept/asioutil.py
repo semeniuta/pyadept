@@ -11,15 +11,15 @@ def create_server(server_factory, loop, host, port):
 
 def create_periodic_task(loop, func):
 
-    future_stop_event = loop.create_future()
+    stop_event = asyncio.Event()
 
     async def tick(interval):
 
-        while not future_stop_event.done():
+        while not stop_event.is_set():
             await asyncio.sleep(interval)
             func()
 
-    return future_stop_event, tick
+    return stop_event, tick
 
 
 class GenericProtocol(asyncio.Protocol):

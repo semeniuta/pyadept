@@ -55,7 +55,7 @@ if __name__ == '__main__':
     server = create_server(server_factory, loop, '', 1234)
 
     t0 = loop.time()
-    future_server_closed, tick = create_periodic_task(
+    stop_ticking, tick = create_periodic_task(
         loop,
         lambda: print( 't={:.3f}'.format(loop.time() - t0) )
     )
@@ -69,6 +69,6 @@ if __name__ == '__main__':
     finally:
         server.close()
         loop.run_until_complete(server.wait_closed())
-        future_server_closed.set_result(True)
+        stop_ticking.set()
         loop.run_until_complete(future_tick)
         loop.close()
