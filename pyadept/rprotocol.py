@@ -9,17 +9,17 @@ def interpret_robot_response(msg):
 
     elements = msg.split(b':')
 
-    msg_id, status, timestamp = elements[:3]
+    msg_id, status, timestamps = elements[:3]
     tail = elements[3:]
 
-    return msg_id, status, timestamp, tail
+    return msg_id, status, timestamps, tail
 
 
 def add_id(request_id, msg):
     return request_id + b':' + msg
 
 
-async def client_coro(host, port, commands, buffer_size=1024, wait_t=None):
+async def mcn_client(host, port, commands, buffer_size=1024, wait_t=None):
 
     reader, writer = await asyncio.open_connection(host, port)
 
@@ -68,7 +68,7 @@ async def read_all_responses(reader, ids_set, buffer_size=1024):
 
         if messages is not None:
             for msg in messages:
-                msg_id, status, timestamp, tail = interpret_robot_response(msg)
+                msg_id, status, timestamps, tail = interpret_robot_response(msg)
                 ids_set.remove(msg_id)
 
         if rest is not None:

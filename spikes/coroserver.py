@@ -1,3 +1,8 @@
+"""
+Simulator of RobotServer implemented as an AsyncIO protocol,
+launched concurrently with a periodic tick task
+"""
+
 import asyncio
 import functools
 
@@ -5,7 +10,7 @@ from pyadept.strutil import split_data
 from pyadept.asioutil import GenericProtocol, create_server, create_periodic_task
 from pyadept.rcommands import DELIMITER
 
-class EchoServerProtocol(GenericProtocol):
+class RobotServerSimulator(GenericProtocol):
 
     def connection_made(self, transport):
 
@@ -46,7 +51,7 @@ if __name__ == '__main__':
 
     loop = asyncio.get_event_loop()
 
-    server_factory = functools.partial(EchoServerProtocol, loop=loop)
+    server_factory = functools.partial(RobotServerSimulator, loop=loop)
     server = create_server(server_factory, loop, '', 1234)
 
     t0 = loop.time()

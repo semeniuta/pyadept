@@ -1,6 +1,9 @@
+"""
+Client of an echo server, realized as an AsyncIO protocol
+"""
+
 import asyncio
 import functools
-import uuid
 
 from pyadept.strutil import split_data, generate_id_bytes
 from pyadept.asioutil import GenericProtocol

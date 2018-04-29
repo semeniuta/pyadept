@@ -1,3 +1,9 @@
+"""
+Demo of a periodic tick corotine,
+synchronized with a future on completion
+of a long operation
+"""
+
 import asyncio
 
 

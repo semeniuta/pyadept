@@ -1,5 +1,4 @@
 import asyncio
-import functools
 
 
 def create_server(server_factory, loop, host, port):

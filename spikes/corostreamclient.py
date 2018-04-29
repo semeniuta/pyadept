@@ -1,3 +1,7 @@
+"""
+Playing with the stream-based MCN client
+"""
+
 import sys
 import os
 sys.path.append(os.getcwd())
@@ -30,7 +34,7 @@ if __name__ == '__main__':
 
     commands_cycle = itertools.cycle(commands)
 
-    client_coro = rprotocol.client_coro(
+    client_coro = rprotocol.mcn_client(
         args.host,
         args.port, commands,
         buffer_size=args.buffersize,
