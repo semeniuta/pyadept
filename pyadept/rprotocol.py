@@ -26,15 +26,7 @@ async def mcn_client(host, port, commands, buffer_size=1024, wait_t=None):
 
     for cmd in commands:
 
-        for cmd_bytes in cmd.get_bytes():
-
-            cmd_id = generate_id_bytes()
-            cmd_data = add_id(cmd_id, cmd_bytes)
-
-            writer.write(cmd_data)
-            ids.add(cmd_id)
-
-            print('Sent:', cmd_data)
+        await send_command(cmd, writer, ids)
 
         if wait_t is not None:
             await asyncio.sleep(wait_t)
@@ -46,6 +38,19 @@ async def mcn_client(host, port, commands, buffer_size=1024, wait_t=None):
             return
 
     await writer.drain()
+
+
+async def send_command(command, writer, ids_set):
+
+    for cmd_bytes in command.get_bytes():
+
+        cmd_id = generate_id_bytes()
+        cmd_data = add_id(cmd_id, cmd_bytes)
+
+        writer.write(cmd_data)
+        ids_set.add(cmd_id)
+
+        print('Sent:', cmd_data)
 
 
 async def read_all_responses(reader, ids_set, buffer_size=1024):
