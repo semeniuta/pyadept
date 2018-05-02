@@ -58,6 +58,12 @@ async def connect_and_execute_commands(host, port, commands, buffer_size=1024, w
 
 
 async def send_command_sequence(commands, reader, writer, ids_set, buffer_size=1024, wait_t=0):
+    """
+    Execute a sequnces of commands by sending the correspodning byte strings
+    using the supplied AsyncIO writer. After each command's bytes are sent,
+    responses from reader are received so that every command is acknowledged
+    by the server
+    """
 
     for cmd in commands:
 

@@ -4,6 +4,9 @@ zmq.asyncio.install()
 
 
 def create_async_subscriber(server_address, sub_prefix=b''):
+    """
+    Create asynchronous ZeroMQ subscriber
+    """
 
     ctx = zmq.asyncio.Context()
 
@@ -15,6 +18,9 @@ def create_async_subscriber(server_address, sub_prefix=b''):
 
 
 def create_async_publisher(bind_address):
+    """
+    Create asynchronous ZeroMQ publisher
+    """
 
     ctx = zmq.asyncio.Context()
 
@@ -25,6 +31,11 @@ def create_async_publisher(bind_address):
 
 
 async def zmq_sub_listener(server_address, stop_event, on_recv=None, sub_prefix=b'', poll_timeout=0.001):
+    """
+    Continuous asynchronous ZeroMQ subsriber. When an event is received,
+    `on_recv` callback is invoked. To stop the subsriber, `stop_event`
+    should be set from an other coroutine
+    """
 
     sub_sock = create_async_subscriber(server_address, sub_prefix)
 
@@ -49,6 +60,14 @@ async def zmq_sub_listener(server_address, stop_event, on_recv=None, sub_prefix=
 
 
 class PubSubPair(object):
+    """
+    PubSubPair encapsulates a pair of asynchronous
+    ZeroMQ publisher and subscriber.
+
+    The `communicate` method is a coroutine. When awaited, it
+    publishes the supplied object (at `pub_address`) and polls
+    the result of the computation of interest from `sub_address`
+    """
 
     def __init__(self, pub_address, sub_address, poll_timeout=0.001):
 
@@ -72,5 +91,3 @@ class PubSubPair(object):
                 break
 
         return response
-
-
