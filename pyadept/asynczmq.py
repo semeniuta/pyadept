@@ -47,3 +47,30 @@ async def zmq_sub_listener(server_address, stop_event, on_recv=None, sub_prefix=
 
     sub_sock.close()
 
+
+class PubSubPair(object):
+
+    def __init__(self, pub_address, sub_address, poll_timeout=0.001):
+
+        self._pub_sock = create_async_publisher(pub_address)
+        self._sub_sock = create_async_subscriber(sub_address)
+
+        self._poller = zmq.asyncio.Poller()
+        self._poller.register(self._sub_sock)
+        self._poll_timeout = poll_timeout
+
+    async def communicate(self, obj):
+
+        await self._pub_sock.send(obj)
+
+        while True:
+
+            p_socks = dict(await self._poller.poll(timeout=self._poll_timeout))
+
+            if self._sub_sock in p_socks:
+                response = await self._sub_sock.recv()
+                break
+
+        return response
+
+
