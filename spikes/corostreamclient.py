@@ -34,9 +34,10 @@ if __name__ == '__main__':
 
     commands_cycle = itertools.cycle(commands)
 
-    client_coro = rprotocol.mcn_client(
+    client_coro = rprotocol.connect_and_execute_commands(
         args.host,
-        args.port, commands,
+        args.port,
+        commands,
         buffer_size=args.buffersize,
         wait_t=args.sleep
     )

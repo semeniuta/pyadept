@@ -18,21 +18,52 @@ def add_id(request_id, msg):
     return request_id + b':' + msg
 
 
-async def mcn_client(host, port, commands, buffer_size=1024, wait_t=None):
+class MasterControlNode(object):
+
+    def __init__(self, r_host, r_port):
+
+        self._host = r_host
+        self._port = r_port
+
+        self._reader = None
+        self._writer = None
+
+        self._ids = set()
+
+    async def connect(self):
+
+        r, w = await asyncio.open_connection(self._host, self._port)
+        self._reader = r
+        self._writer = w
+
+    async def send_commands(self, commands):
+
+        for cmd in commands:
+            await send_command(cmd, self._writer, self._ids)
+
+    async def wait_for_responses(self, buffer_size=2048):
+
+        await read_all_responses(self._reader, self._ids, buffer_size)
+
+
+async def connect_and_execute_commands(host, port, commands, buffer_size=1024, wait_t=None):
 
     reader, writer = await asyncio.open_connection(host, port)
-
     ids = set()
+    await send_command_sequence(commands, reader, writer, ids, buffer_size, wait_t)
+
+
+async def send_command_sequence(commands, reader, writer, ids_set, buffer_size=1024, wait_t=None):
 
     for cmd in commands:
 
-        await send_command(cmd, writer, ids)
+        await send_command(cmd, writer, ids_set)
 
         if wait_t is not None:
             await asyncio.sleep(wait_t)
 
         try:
-            await read_all_responses(reader, ids, buffer_size)
+            await read_all_responses(reader, ids_set, buffer_size)
         except ServerClosedWhileReading:
             writer.close()
             return
