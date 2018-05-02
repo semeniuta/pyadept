@@ -38,7 +38,7 @@ if __name__ == '__main__':
 
     async def client():
         await mcn.connect()
-        await mcn.exec(commands)
+        await mcn.exec(*commands)
 
     client_coro = client()
 
