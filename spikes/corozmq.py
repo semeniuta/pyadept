@@ -2,6 +2,10 @@
 Playing with asynchronous ZeroMQ
 """
 
+import sys
+import os
+sys.path.append(os.getcwd())
+
 import asyncio
 
 from pyadept import asioutil
@@ -31,7 +35,8 @@ if __name__ == '__main__':
 
     task_subscriber = asynczmq.zmq_sub_listener(
         'tcp://127.0.0.1:1235',
-        stop_event=stop_ticking
+        stop_event=stop_ticking,
+        on_recv=lambda msg: print('ZMQ received', msg)
     )
 
     loop.run_until_complete(

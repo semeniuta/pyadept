@@ -14,7 +14,17 @@ def create_async_subscriber(server_address, sub_prefix=b''):
     return sub_sock
 
 
-async def zmq_sub_listener(server_address, stop_event, sub_prefix=b'', poll_timeout=0.001):
+def create_async_publisher(bind_address):
+
+    ctx = zmq.asyncio.Context()
+
+    pub_sock = ctx.socket(zmq.PUB)
+    pub_sock.bind(bind_address)
+
+    return pub_sock
+
+
+async def zmq_sub_listener(server_address, stop_event, on_recv=None, sub_prefix=b'', poll_timeout=0.001):
 
     sub_sock = create_async_subscriber(server_address, sub_prefix)
 
@@ -27,7 +37,9 @@ async def zmq_sub_listener(server_address, stop_event, sub_prefix=b'', poll_time
 
         if sub_sock in p_socks:
             msg = await sub_sock.recv()
-            print('ZMQ received', msg) #temp
+
+            if on_recv is not None:
+                on_recv(msg)
 
         if stop_event.is_set():
             print('Stopping the subscriber')
