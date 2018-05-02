@@ -32,18 +32,18 @@ if __name__ == '__main__':
 
     loop = asyncio.get_event_loop()
 
-    commands_cycle = itertools.cycle(commands)
+    commands_cycle = itertools.cycle(commands) # not yet used
 
-    client_coro = rprotocol.connect_and_execute_commands(
-        args.host,
-        args.port,
-        commands,
-        buffer_size=args.buffersize,
-        wait_t=args.sleep
-    )
+    mcn = rprotocol.MasterControlNode(args.host, args.port, args.buffersize)
+
+    async def client():
+        await mcn.connect()
+        await mcn.exec(commands)
+
+    client_coro = client()
 
     try:
-        loop.run_until_complete(client_coro)
+        loop.run_until_complete( client_coro )
     except KeyboardInterrupt:
         print('Stopping the robot client due to keyboard interrupt')
     finally:

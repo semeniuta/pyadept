@@ -20,10 +20,12 @@ def add_id(request_id, msg):
 
 class MasterControlNode(object):
 
-    def __init__(self, r_host, r_port):
+    def __init__(self, r_host, r_port, buffer_size=2048):
 
         self._host = r_host
         self._port = r_port
+
+        self._buffer_size = buffer_size
 
         self._reader = None
         self._writer = None
@@ -36,14 +38,16 @@ class MasterControlNode(object):
         self._reader = r
         self._writer = w
 
-    async def send_commands(self, commands):
+    async def exec(self, commands, wait_t=0):
 
-        for cmd in commands:
-            await send_command(cmd, self._writer, self._ids)
-
-    async def wait_for_responses(self, buffer_size=2048):
-
-        await read_all_responses(self._reader, self._ids, buffer_size)
+        await send_command_sequence(
+            commands,
+            self._reader,
+            self._writer,
+            self._ids,
+            self._buffer_size,
+            wait_t
+        )
 
 
 async def connect_and_execute_commands(host, port, commands, buffer_size=1024, wait_t=None):
@@ -53,14 +57,12 @@ async def connect_and_execute_commands(host, port, commands, buffer_size=1024, w
     await send_command_sequence(commands, reader, writer, ids, buffer_size, wait_t)
 
 
-async def send_command_sequence(commands, reader, writer, ids_set, buffer_size=1024, wait_t=None):
+async def send_command_sequence(commands, reader, writer, ids_set, buffer_size=1024, wait_t=0):
 
     for cmd in commands:
 
         await send_command(cmd, writer, ids_set)
-
-        if wait_t is not None:
-            await asyncio.sleep(wait_t)
+        await asyncio.sleep(wait_t)
 
         try:
             await read_all_responses(reader, ids_set, buffer_size)
