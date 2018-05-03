@@ -25,9 +25,10 @@ if __name__ == '__main__':
 
     commands = [
         rcommands.DirectCommand('movehome'),
+        rcommands.DirectCommand('break'),
         rcommands.MoveRelJoints([-90, 60, 30, -90, 0, 0]),
-        rcommands.MoveRelWorld([0, 0, 185, 0, 0, 0]),
-        rcommands.MoveRelWorld([0, 0, -100, 0, 0, 0])
+        rcommands.MoveRelTool([0, 0, 185, 0, 0, 0]),
+        rcommands.MoveRelTool([0, 0, -100, 0, 0, 0])
     ]
 
     loop = asyncio.get_event_loop()
@@ -38,7 +39,7 @@ if __name__ == '__main__':
 
     async def client():
         await mcn.connect()
-        await mcn.exec(*commands)
+        await mcn.exec(*commands, wait_t=args.sleep)
 
     client_coro = client()
 
