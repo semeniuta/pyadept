@@ -43,7 +43,7 @@ def create_vision_pipeline(q_images, q_out):
         ufgraph.computational_graph,
         q_images,
         q_out,
-        event_dispatcher=dispatch_images,
+        event_dispatcher=lambda im: {'image': im},
         out_prep_func=prepare_output,
         frozen_tokens=ufgraph.parameters
     )
@@ -76,9 +76,17 @@ if __name__ == '__main__':
             req_event = q_in.get()
             pipe.set_attr('req_event', req_event)
 
-            images = grabber.grab(meta=False)
+            print('Grabbing the image')
+            images_fxis = grabber.grab(meta=False)
+            #im = cv2.cvtColor( images_fxis[0], cv2.COLOR_BAYER_BG2GRAY )
+            im = images_fxis[0]
+            print('Image shape:', im.shape)
 
-            q_images.put(images)
+            #tmp
+            print('Saving the image')
+            cv2.imwrite("image.jpg", im)
+
+            q_images.put(im)
 
         except KeyboardInterrupt as e:
 

@@ -46,11 +46,3 @@ if __name__ == '__main__':
 
     mcn = rprotocol.MasterControlNode(args.rhost, args.rport)
     pspair = asynczmq.PubSubPair(args.pub, args.sub)
-
-
-
-
-
-
-
-
