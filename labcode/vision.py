@@ -73,18 +73,18 @@ if __name__ == '__main__':
         try:
 
             print('Waiting for request_event')
-            req_event = q_in.get()
+            req_event_bytes = q_in.get()
+            req_event = Event()
+            req_event.ParseFromString(req_event_bytes)
             pipe.set_attr('req_event', req_event)
 
             print('Grabbing the image')
             images_fxis = grabber.grab(meta=False)
-            #im = cv2.cvtColor( images_fxis[0], cv2.COLOR_BAYER_BG2GRAY )
-            im = images_fxis[0]
-            print('Image shape:', im.shape)
+            im = cv2.cvtColor( images_fxis[0], cv2.COLOR_BGR2GRAY )
 
             #tmp
             print('Saving the image')
-            cv2.imwrite("image.jpg", im)
+            cv2.imwrite("image.jpg", images_fxis[0])
 
             q_images.put(im)
 
