@@ -38,7 +38,7 @@ class MasterControlNode(object):
         self._reader = r
         self._writer = w
 
-    async def exec(self, *commands, wait_t=0):
+    async def cmdexec(self, *commands, wait_t=0):
 
         await send_command_sequence(
             commands,

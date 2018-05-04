@@ -11,7 +11,7 @@ from pyadept import strutil
 
 
 async def init_move(mcn):
-    await mcn.exec(
+    await mcn.cmdexec(
         rcommands.DirectCommand('movehome'),
         rcommands.MoveRelJoints([-90, 60, 30, -90, 0, 0])
     )
@@ -29,10 +29,10 @@ async def ufloop(mcn, pspair):
         sharpness.append(s)
 
         if len(sharpness) > 1 and sharpness[-1] < sharpness[-2]:
-            await mcn.exec(rcommands.MoveToolZ(-5))
+            await mcn.cmdexec(rcommands.MoveToolZ(-5))
             break
 
-        await mcn.exec(rcommands.MoveToolZ(5))
+        await mcn.cmdexec(rcommands.MoveToolZ(5))
 
 
 if __name__ == '__main__':
