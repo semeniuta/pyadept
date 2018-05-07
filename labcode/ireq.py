@@ -14,6 +14,7 @@ import uuid
 from epypes.cli import parse_pubsub_args
 from epypes.protobuf.event_pb2 import Event
 from epypes.protobuf.justbytes_pb2 import JustBytes
+from epypes.protobuf.pbprocess import get_attributes_dict
 
 
 def create_zmq_sockets(pub_address, sub_address):
@@ -45,7 +46,7 @@ def get_response(sub_socket):
 
     response_data = sub_socket.recv()
 
-    vision_response = JustBytes()
+    vision_response = Event()
     vision_response.ParseFromString(response_data)
 
     return vision_response

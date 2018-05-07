@@ -23,14 +23,15 @@ from epypes.protobuf.event_pb2 import Event
 
 import ufgraph
 
+
 def prepare_output(pipe):
 
     resp_event = Event()
     resp_event.type = 'VisionResponse'
 
     req_event = pipe.get_attr('req_event')
-    copy_downstream_attributes(req_event, resp_event)
-
+    resp_event.id = req_event.id
+    #copy_downstream_attributes(req_event, resp_event)
     add_attribute(resp_event, 'sharpness', pipe['sharpness'])
 
     return resp_event.SerializeToString()
@@ -81,10 +82,6 @@ if __name__ == '__main__':
             print('Grabbing the image')
             images_fxis = grabber.grab(meta=False)
             im = cv2.cvtColor( images_fxis[0], cv2.COLOR_BGR2GRAY )
-
-            #tmp
-            print('Saving the image')
-            cv2.imwrite("image.jpg", images_fxis[0])
 
             q_images.put(im)
 

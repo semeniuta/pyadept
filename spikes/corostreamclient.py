@@ -27,8 +27,9 @@ if __name__ == '__main__':
         rcommands.DirectCommand('movehome'),
         rcommands.DirectCommand('break'),
         rcommands.MoveRelJoints([-90, 60, 30, -90, 0, 0]),
-        rcommands.MoveRelTool([0, 0, 185, 0, 0, 0]),
-        rcommands.MoveRelTool([0, 0, -100, 0, 0, 0])
+        rcommands.MoveRelTool([40, -25, 185, 0, 0, 0]),
+        rcommands.MoveRelJoints([0, 0, 0, 0, 0, 1.5]),
+
     ]
 
     loop = asyncio.get_event_loop()
