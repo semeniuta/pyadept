@@ -3,6 +3,7 @@ import os
 import numpy as np
 import cv2
 import pickle
+import time
 
 sys.path.append(os.getcwd())
 PHD_CODE = os.environ['PHD_CODE']
@@ -31,8 +32,13 @@ def prepare_output(pipe):
 
     req_event = pipe.get_attr('req_event')
     resp_event.id = req_event.id
-    #copy_downstream_attributes(req_event, resp_event)
+
+    for k, v in pipe.get_attr('timestamps').items():
+        add_attribute(resp_event, k, v)
+
     add_attribute(resp_event, 'sharpness', pipe['sharpness'])
+    add_attribute(resp_event, 'time_visionpipe_reacted', pipe.loop.counter.timestamp_event_arrival)
+    add_attribute(resp_event, 'time_visionpipe_pub', time.perf_counter())
 
     return resp_event.SerializeToString()
 
@@ -75,14 +81,25 @@ if __name__ == '__main__':
 
             print('Waiting for request_event')
             req_event_bytes = q_in.get()
+            t_react = time.perf_counter()
+
             req_event = Event()
             req_event.ParseFromString(req_event_bytes)
             pipe.set_attr('req_event', req_event)
 
             print('Grabbing the image')
+            t_grab_0= time.perf_counter()
             images_fxis = grabber.grab(meta=False)
-            im = cv2.cvtColor( images_fxis[0], cv2.COLOR_BGR2GRAY )
+            t_grab_1 = time.perf_counter()
 
+            timestamps = {
+                't_vision_reacted': t_react
+                't_imacq_reacted': t_grab_0,
+                't_imacq_got_im': t_grab_1
+            }
+            pipe.set_attr('timestamps', timestamps)
+
+            im = cv2.cvtColor( images_fxis[0], cv2.COLOR_BGR2GRAY )
             q_images.put(im)
 
         except KeyboardInterrupt as e:
