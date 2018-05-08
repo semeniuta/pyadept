@@ -26,11 +26,13 @@ async def init_move(mcn):
         rcommands.DirectCommand('break'),
         rcommands.MoveRelJoints([-90, 60, 30, -90, 0, 0]),
         rcommands.MoveRelTool([40, -25, 185, 0, 0, 0]),
-        rcommands.MoveRelJoints([0, 0, 0, 0, 0, 1.5]),
+        rcommands.MoveRelJoints([0, 0, 0, 0, 0, 1]),
     )
 
 
 async def ufloop(mcn, pspair):
+
+    await mcn.connect()
 
     sharpness = []
 
@@ -46,12 +48,16 @@ async def ufloop(mcn, pspair):
 
         s = attributes['sharpness']
         sharpness.append(s)
+        print('s =', s)
 
-        if len(sharpness) > 1 and sharpness[-1] < sharpness[-2]:
-            await mcn.cmdexec(rcommands.MoveToolZ(-5))
+        if len(sharpness) > 1 and (sharpness[-1] < sharpness[-2]):
+            await mcn.cmdexec(
+                rcommands.SetSpeed(2),
+                rcommands.MoveToolZ(5)
+            )
             break
 
-        await mcn.cmdexec(rcommands.MoveToolZ(5))
+    await mcn.cmdexec(rcommands.MoveToolZ(-5))
 
 
 if __name__ == '__main__':
@@ -65,3 +71,13 @@ if __name__ == '__main__':
 
     mcn = rprotocol.MasterControlNode(args.rhost, args.rport)
     pspair = asynczmq.PubSubPair(args.pub, args.sub)
+
+    ufloop_coro = ufloop(mcn, pspair)
+
+    try:
+        loop.run_until_complete( ufloop_coro )
+    except KeyboardInterrupt:
+        print('Stopping the robot client due to keyboard interrupt')
+    finally:
+        print('Done sending. Closing event loop')
+        loop.close()
