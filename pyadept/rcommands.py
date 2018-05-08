@@ -32,6 +32,15 @@ class DirectCommand(RobotCommand):
         return self._cmd.encode() + DELIMITER,
 
 
+class SetSpeed(RobotCommand):
+
+    def __init__(self, speed_factor):
+        self._speed_factor = speed_factor
+
+    def get_bytes(self):
+        return 'set_speed:{:d}'.format(self._speed_factor).encode() + DELIMITER,
+
+
 class MotionCommand(RobotCommand):
 
     def __init__(self, template, vec, break_move=True):
@@ -79,4 +88,3 @@ class MoveToolZ(MoveRelTool):
     def __init__(self, z, break_move=True):
         pose = np.array([0, 0, z, 0, 0, 0])
         super(MoveToolZ, self).__init__(pose, break_move)
-
