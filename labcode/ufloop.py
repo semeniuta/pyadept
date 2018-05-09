@@ -5,12 +5,13 @@
 import sys
 import os
 import argparse
+import asyncio
+import pandas as pd
 
 sys.path.append(os.getcwd())
 PHD_CODE = os.environ['PHD_CODE']
 sys.path.append(os.path.join(PHD_CODE, 'EPypes'))
 sys.path.append(os.path.join(PHD_CODE, 'EPypes/epypes/protobuf'))
-import asyncio
 
 from pyadept import rcommands
 from pyadept import rprotocol
@@ -71,14 +72,23 @@ if __name__ == '__main__':
     args = arg_parser.parse_args()
 
     loop = asyncio.get_event_loop()
+    t0 = loop.time()
+
+    log_dict = dict()
+    responses = []
+
+    def on_send(cmd, cmd_id, cmd_data):
+        t = loop.time() - t0
+        log_dict[cmd_id] = {'data': cmd_data, 't_send': t}
+
+    def on_recv(messages, rest):
+        t = loop.time() - t0
+        for msg in messages:
+            responses.append( (msg, t) )
 
     mcn = rprotocol.MasterControlNode(loop, args.rhost, args.rport)
-
-    def on_send():
-        pass
-
-    def on_recv():
-        pass
+    mcn.set_on_send(on_send)
+    mcn.set_on_recv(on_recv)
 
     pspair = asynczmq.PubSubPair(args.pub, args.sub)
 
@@ -91,3 +101,19 @@ if __name__ == '__main__':
     finally:
         print('Done sending. Closing event loop')
         loop.close()
+
+    for msg, t in responses:
+
+        msg_id, status, timestamps, tail = rprotocol.interpret_robot_response(msg)
+        robot_t0, robot_t1 = ( float(el) for el in timestamps.split(b',') )
+
+        log_dict[msg_id].update({
+            'resp_status': status,
+            'robot_t0': robot_t0,
+            'robot_t1': robot_t1,
+        })
+
+    df = pd.DataFrame(log_dict)
+    df.to_csv('log.cvs')
+
+
