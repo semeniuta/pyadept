@@ -78,9 +78,21 @@ class PubSubPair(object):
         self._poller.register(self._sub_sock)
         self._poll_timeout = poll_timeout
 
+        self._on_send = None
+        self._on_recv = None
+
+    def set_on_send(self, callback):
+        self._on_send = callback
+
+    def set_on_recv(self, callback):
+        self._on_recv = callback
+
     async def communicate(self, obj):
 
         await self._pub_sock.send(obj)
+
+        if not self._on_send is None:
+            self._on_send(obj)
 
         while True:
 
@@ -88,6 +100,10 @@ class PubSubPair(object):
 
             if self._sub_sock in p_socks:
                 response = await self._sub_sock.recv()
+
+                if not self._on_recv is None:
+                    self._on_recv(response)
+
                 break
 
         return response
