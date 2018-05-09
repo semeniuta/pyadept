@@ -39,6 +39,10 @@ if __name__ == '__main__':
 
     mcn = rprotocol.MasterControlNode(args.host, args.port, args.buffersize)
 
+    mcn.set_on_recv( lambda messages, rest: print('messages={}, rest={}'.format(messages, rest)) )
+    mcn.set_on_send( lambda cmd, cmd_id, cmd_data: print('Sent:', cmd_data) )
+    mcn.set_on_done( lambda: print('Received all') )
+
     async def client():
         await mcn.connect()
         await mcn.cmdexec(*commands, wait_t=args.sleep)

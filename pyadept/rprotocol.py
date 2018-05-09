@@ -32,6 +32,19 @@ class MasterControlNode(object):
 
         self._ids = set()
 
+        self._on_send = None
+        self._on_recv = None
+        self._on_done = None
+
+    def set_on_send(self, callback):
+        self._on_send = callback
+
+    def set_on_recv(self, callback):
+        self._on_recv = callback
+
+    def set_on_done(self, callback):
+        self._on_done = callback
+
     async def connect(self):
 
         r, w = await asyncio.open_connection(self._host, self._port)
@@ -46,7 +59,10 @@ class MasterControlNode(object):
             self._writer,
             self._ids,
             self._buffer_size,
-            wait_t
+            wait_t,
+            self._on_send,
+            self._on_recv,
+            self._on_done
         )
 
 
@@ -57,7 +73,17 @@ async def connect_and_execute_commands(host, port, commands, buffer_size=1024, w
     await send_command_sequence(commands, reader, writer, ids, buffer_size, wait_t)
 
 
-async def send_command_sequence(commands, reader, writer, ids_set, buffer_size=1024, wait_t=0):
+async def send_command_sequence(
+    commands,
+    reader,
+    writer,
+    ids_set,
+    buffer_size=1024,
+    wait_t=0,
+    on_send=None,
+    on_recv=None,
+    on_done=None
+):
     """
     Execute a sequnces of commands by sending the correspodning byte strings
     using the supplied AsyncIO writer. After each command's bytes are sent,
@@ -67,11 +93,11 @@ async def send_command_sequence(commands, reader, writer, ids_set, buffer_size=1
 
     for cmd in commands:
 
-        await send_command(cmd, writer, ids_set)
+        await send_command(cmd, writer, ids_set, on_send)
         await asyncio.sleep(wait_t)
 
         try:
-            await read_all_responses(reader, ids_set, buffer_size)
+            await read_all_responses(reader, ids_set, buffer_size, on_recv, on_done)
         except ServerClosedWhileReading:
             writer.close()
             return
@@ -79,7 +105,7 @@ async def send_command_sequence(commands, reader, writer, ids_set, buffer_size=1
     await writer.drain()
 
 
-async def send_command(command, writer, ids_set):
+async def send_command(command, writer, ids_set, on_send=None):
 
     for cmd_bytes in command.get_bytes():
 
@@ -89,10 +115,11 @@ async def send_command(command, writer, ids_set):
         writer.write(cmd_data)
         ids_set.add(cmd_id)
 
-        print('Sent:', cmd_data)
+        if on_send is not None:
+            on_send(command, cmd_id, cmd_data)
 
 
-async def read_all_responses(reader, ids_set, buffer_size=1024):
+async def read_all_responses(reader, ids_set, buffer_size=1024, on_recv=None, on_done=None):
 
     memory = b''
 
@@ -107,7 +134,9 @@ async def read_all_responses(reader, ids_set, buffer_size=1024):
         memory = b''
 
         messages, rest = split_data(all_data, DELIMITER)
-        print('messages={}, rest={}'.format(messages, rest))
+
+        if on_recv is not None:
+            on_recv(messages, rest)
 
         if messages is not None:
             for msg in messages:
@@ -117,7 +146,8 @@ async def read_all_responses(reader, ids_set, buffer_size=1024):
         if rest is not None:
             memory = rest
 
-    print('Received all')
+    if on_done is not None:
+        on_done()
 
 
 class ServerClosedWhileReading(Exception):

@@ -3,12 +3,17 @@ Simulator of RobotServer implemented as an AsyncIO protocol,
 launched concurrently with a periodic tick task
 """
 
+import sys
+import os
+sys.path.append(os.getcwd())
+
 import asyncio
 import functools
 
 from pyadept.strutil import split_data
 from pyadept.asioutil import GenericProtocol, create_server, create_periodic_task
 from pyadept.rcommands import DELIMITER
+
 
 class RobotServerSimulator(GenericProtocol):
 
