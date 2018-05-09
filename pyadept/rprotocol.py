@@ -20,7 +20,9 @@ def add_id(request_id, msg):
 
 class MasterControlNode(object):
 
-    def __init__(self, r_host, r_port, buffer_size=2048):
+    def __init__(self, loop, r_host, r_port, buffer_size=2048):
+
+        self._loop = loop
 
         self._host = r_host
         self._port = r_port

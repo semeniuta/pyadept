@@ -37,7 +37,7 @@ if __name__ == '__main__':
 
     commands_cycle = itertools.cycle(commands) # not yet used
 
-    mcn = rprotocol.MasterControlNode(args.host, args.port, args.buffersize)
+    mcn = rprotocol.MasterControlNode(loop, args.host, args.port, args.buffersize)
 
     mcn.set_on_recv( lambda messages, rest: print('messages={}, rest={}'.format(messages, rest)) )
     mcn.set_on_send( lambda cmd, cmd_id, cmd_data: print('Sent:', cmd_data) )
