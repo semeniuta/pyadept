@@ -88,36 +88,15 @@ if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     t0 = loop.time()
 
-    log_robot = dict()
-    robot_responses = []
-
-    log_vision = dict()
-    vision_responses = []
-
-    def on_send_robot(cmd, cmd_id, cmd_data):
-        t = loop.time() - t0
-        log_robot[cmd_id] = {'data': cmd_data, 't_send': t}
-
-    def on_recv_robot(messages, rest):
-        t = loop.time() - t0
-        for msg in messages:
-            robot_responses.append((msg, t))
-
-    def on_send_vision(pb_request):
-        t = loop.time() - t0
-        log_vision[pb_request.id] = {'time_sent': t}
-
-    def on_recv_vision(pb_response):
-        t = loop.time() - t0
-        vision_responses.append((pb_response, t))
+    datacap = rprotocol.RobotVisionDataCapture(loop, t0)
 
     mcn = rprotocol.MasterControlNode(loop, args.rhost, args.rport)
-    mcn.set_on_send(on_send_robot)
-    mcn.set_on_recv(on_recv_robot)
+    mcn.set_on_send(datacap.on_send_robot)
+    mcn.set_on_recv(datacap.on_recv_robot)
 
     pscomm = rprotocol.ProtobufCommunicator(args.pub, args.sub, response_type=Event)
-    pscomm.set_on_send(on_send_vision)
-    pscomm.set_on_recv(on_recv_vision)
+    pscomm.set_on_send(datacap.on_send_vision)
+    pscomm.set_on_recv(datacap.on_recv_vision)
 
     ufloop_coro = ufloop(mcn, pscomm)
 
@@ -129,25 +108,9 @@ if __name__ == '__main__':
         print('Done sending. Closing event loop')
         loop.close()
 
-    for msg, t in robot_responses:
-
-        msg_id, status, timestamps, tail = rprotocol.interpret_robot_response(msg)
-        robot_t0, robot_t1 = ( float(el) for el in timestamps.split(b',') )
-
-        log_robot[msg_id].update({
-            'resp_status': status,
-            'robot_t0': robot_t0,
-            'robot_t1': robot_t1,
-        })
-
-    for pb_resp, t in vision_responses:
-        resp_id, resp_attrs = interpret_response(pb_resp)
-        log_vision[resp_id].update(resp_attrs)
-
-    df_robot = pd.DataFrame(log_robot)
+    df_robot, df_vision = datacap.prepare_data()
+    
     df_robot.to_csv('log_robot.cvs')
-
-    df_vision = pd.DataFrame(log_vision)
     df_vision.to_csv('log_vision.csv')
 
 

@@ -1,8 +1,11 @@
 import asyncio
+import pandas as pd
 
 from pyadept.strutil import split_data, generate_id_bytes
 from pyadept.asynczmq import PubSubPair
 from pyadept.rcommands import DELIMITER
+
+from epypes.protobuf.pbprocess import get_attributes_dict
 
 
 def interpret_robot_response(msg):
@@ -13,6 +16,14 @@ def interpret_robot_response(msg):
     tail = elements[3:]
 
     return msg_id, status, timestamps, tail
+
+
+def interpret_vision_response(pb_resp):
+
+    resp_id = pb_resp.id
+    resp_attrs = get_attributes_dict(pb_resp.attributes.entries)
+
+    return resp_id, resp_attrs
 
 
 def add_id(request_id, msg):
@@ -193,3 +204,58 @@ async def read_all_responses(reader, ids_set, buffer_size=1024, on_recv=None, on
 
 class ServerClosedWhileReading(Exception):
     pass
+
+
+class RobotVisionDataCapture(object):
+
+    def __init__(self, loop, t0):
+        self._loop = loop
+        self._t0 = t0
+
+        self._log_robot = dict()
+        self._log_vision = dict()
+
+        self._robot_responses = []
+        self._vision_responses = []
+
+    def current_time(self):
+        return self._loop.time() - self._t0
+
+    def on_send_robot(self, cmd, cmd_id, cmd_data):
+        t = self.current_time()
+        self._log_robot[cmd_id] = {'data': cmd_data, 't_send': t}
+
+    def on_recv_robot(self, messages, rest):
+        t = self.current_time()
+        for msg in messages:
+            self._robot_responses.append((msg, t))
+
+    def on_send_vision(self, pb_request):
+        t = self.current_time()
+        self._log_vision[pb_request.id] = {'time_sent': t}
+
+    def on_recv_vision(self, pb_response):
+        t = self.current_time()
+        self._vision_responses.append((pb_response, t))
+
+    def prepare_data(self):
+
+        for msg, t in self._robot_responses:
+            msg_id, status, timestamps, tail = interpret_robot_response(msg)
+            robot_t0, robot_t1 = (float(el) for el in timestamps.split(b','))
+
+            self._log_robot[msg_id].update({
+                'resp_status': status,
+                'robot_t0': robot_t0,
+                'robot_t1': robot_t1,
+            })
+
+        for pb_resp, t in self._vision_responses:
+            resp_id, resp_attrs = interpret_vision_response(pb_resp)
+            self._log_vision[resp_id].update(resp_attrs)
+
+        df_robot = pd.DataFrame(self._log_robot)
+        df_vision = pd.DataFrame(self._log_vision)
+
+        return df_robot, df_vision
+
