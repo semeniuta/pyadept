@@ -71,9 +71,11 @@ class MasterControlNode(object):
 
 class ProtobufCommunicator(PubSubPair):
 
-    def __init__(self, pub_address, sub_address, poll_timeout=0.001):
+    def __init__(self, pub_address, sub_address, response_type, poll_timeout=0.001):
 
         super(ProtobufCommunicator, self).__init__(pub_address, sub_address, poll_timeout)
+
+        self._response_type = response_type
 
         self._on_send = None
         self._on_recv = None
@@ -95,7 +97,9 @@ class ProtobufCommunicator(PubSubPair):
     async def recv(self):
 
         pb_response_bytes = await super(ProtobufCommunicator, self).recv()
-        pb_response = pb_response_bytes.ParseFromString()
+
+        pb_response = self._response_type()
+        pb_response.ParseFromString(pb_response_bytes)
 
         if self._on_recv is not None:
             self._on_recv(pb_response)
