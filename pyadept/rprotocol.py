@@ -1,6 +1,7 @@
 import asyncio
 
 from pyadept.strutil import split_data, generate_id_bytes
+from pyadept.asynczmq import PubSubPair
 from pyadept.rcommands import DELIMITER
 
 
@@ -66,6 +67,40 @@ class MasterControlNode(object):
             self._on_recv,
             self._on_done
         )
+
+
+class ProtobufCommunicator(PubSubPair):
+
+    def __init__(self, pub_address, sub_address, poll_timeout=0.001):
+
+        super(ProtobufCommunicator, self).__init__(pub_address, sub_address, poll_timeout)
+
+        self._on_send = None
+        self._on_recv = None
+
+    def set_on_send(self, callback):
+        self._on_send = callback
+
+    def set_on_recv(self, callback):
+        self._on_recv = callback
+
+    async def send(self, pb_request):
+
+        pb_event_bytes = pb_request.SerializeToString()
+        await super(ProtobufCommunicator, self).send(pb_event_bytes)
+
+        if self._on_send is not None:
+            self._on_send(pb_request)
+
+    async def recv(self):
+
+        pb_response_bytes = await super(ProtobufCommunicator, self).recv()
+        pb_response = pb_response_bytes.ParseFromString()
+
+        if self._on_recv is not None:
+            self._on_recv(pb_response)
+
+        return pb_response
 
 
 async def connect_and_execute_commands(host, port, commands, buffer_size=1024, wait_t=None):
