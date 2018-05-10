@@ -30,14 +30,6 @@ def create_request():
     return req
 
 
-def interpret_response(pb_resp):
-
-    resp_id = pb_resp.id
-    resp_attrs = get_attributes_dict(pb_resp.attributes.entries)
-
-    return resp_id, resp_attrs
-
-
 async def init_move(mcn):
     await mcn.cmdexec(
         rcommands.DirectCommand('movehome'),
@@ -109,7 +101,7 @@ if __name__ == '__main__':
         loop.close()
 
     df_robot, df_vision = datacap.prepare_data()
-    
+
     df_robot.to_csv('log_robot.cvs')
     df_vision.to_csv('log_vision.csv')
 

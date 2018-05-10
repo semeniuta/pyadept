@@ -81,6 +81,10 @@ class MasterControlNode(object):
 
 
 class ProtobufCommunicator(PubSubPair):
+    """
+    A subclass of PubSubPair that accepts and returns Protobuf objects
+    (and not raw byte strings as PubSubPair)
+    """
 
     def __init__(self, pub_address, sub_address, response_type, poll_timeout=0.001):
 
@@ -140,7 +144,12 @@ async def send_command_sequence(
     Execute a sequnces of commands by sending the correspodning byte strings
     using the supplied AsyncIO writer. After each command's bytes are sent,
     responses from reader are received so that every command is acknowledged
-    by the server
+    by the server.
+
+    Callback functions with the following signatures:
+    on_send accepts (command, command_id, command_data)
+    on_recv accepts (messages, rest)
+    on_done is called without arguments
     """
 
     for cmd in commands:
