@@ -93,7 +93,7 @@ if __name__ == '__main__':
             t_grab_1 = time.perf_counter()
 
             timestamps = {
-                't_vision_reacted': t_react
+                't_vision_reacted': t_react,
                 't_imacq_reacted': t_grab_0,
                 't_imacq_got_im': t_grab_1
             }
