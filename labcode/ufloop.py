@@ -103,7 +103,7 @@ if __name__ == '__main__':
 
     df_robot, df_vision = datacap.prepare_data()
 
-    df_robot.to_csv('log_robot.cvs')
+    df_robot.to_csv('log_robot.csv')
     df_vision.to_csv('log_vision.csv')
 
 

@@ -294,9 +294,12 @@ class RobotVisionDataCapture(object):
                 'robot_t1': robot_t1,
             })
 
+            self._log_robot[msg_id]['t_recv'] = t
+
         for pb_resp, t in self._vision_responses:
             resp_id, resp_attrs = interpret_vision_response(pb_resp)
             self._log_vision[resp_id].update(resp_attrs)
+            self._log_vision[resp_id]['time_recv'] = t
 
         df_robot = pd.DataFrame.from_dict(self._log_robot, orient='index')
         df_vision = pd.DataFrame.from_dict(self._log_vision, orient='index')
