@@ -34,13 +34,13 @@ async def init_move(mcn):
         rcommands.DirectCommand('movehome'),
         rcommands.DirectCommand('break'),
         rcommands.MoveRelJoints([-90, 60, 30, -90, 0, 0]),
-        rcommands.SetSpeed(10),
+        #rcommands.SetSpeed(10),
         rcommands.MoveRelTool([40, -25, 185, 0, 0, 0]),
         rcommands.MoveRelJoints([0, 0, 0, 0, 0, 1.5]),
     )
 
 
-async def ufloop(mcn, pbcomm):
+async def ufloop(mcn, pbcomm, delta_z=10, wait_t=0):
 
     await mcn.connect()
 
@@ -49,6 +49,8 @@ async def ufloop(mcn, pbcomm):
     await init_move(mcn)
 
     while True:
+
+        await asyncio.sleep(wait_t)
 
         pb_req = create_request()
         pb_resp = await pbcomm.communicate(pb_req)
@@ -63,10 +65,10 @@ async def ufloop(mcn, pbcomm):
 
         await mcn.cmdexec(
             rcommands.SetSpeed(5),
-            rcommands.MoveToolZ(10)
+            rcommands.MoveToolZ(delta_z)
         )
 
-    await mcn.cmdexec(rcommands.MoveToolZ(-10))
+    await mcn.cmdexec(rcommands.MoveToolZ(-delta_z))
 
 
 if __name__ == '__main__':
@@ -76,6 +78,8 @@ if __name__ == '__main__':
     arg_parser.add_argument('--rport', default=1234)
     arg_parser.add_argument('--pub', default='ipc:///tmp/psloop-vision-request')
     arg_parser.add_argument('--sub', default='ipc:///tmp/psloop-vision-response')
+    arg_parser.add_argument('--deltaz', type=float, default=10.)
+    arg_parser.add_argument('--wait', type=float, default=0.2)
     args = arg_parser.parse_args()
 
     loop = asyncio.get_event_loop()
@@ -91,7 +95,7 @@ if __name__ == '__main__':
     pscomm.set_on_send(datacap.on_send_vision)
     pscomm.set_on_recv(datacap.on_recv_vision)
 
-    ufloop_coro = ufloop(mcn, pscomm)
+    ufloop_coro = ufloop(mcn, pscomm, delta_z=args.deltaz, wait_t=args.wait)
 
     try:
         loop.run_until_complete( ufloop_coro )
