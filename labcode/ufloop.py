@@ -6,7 +6,6 @@ import sys
 import os
 import argparse
 import asyncio
-import pandas as pd
 
 sys.path.append(os.getcwd())
 PHD_CODE = os.environ['PHD_CODE']
@@ -35,8 +34,9 @@ async def init_move(mcn):
         rcommands.DirectCommand('movehome'),
         rcommands.DirectCommand('break'),
         rcommands.MoveRelJoints([-90, 60, 30, -90, 0, 0]),
+        rcommands.SetSpeed(10),
         rcommands.MoveRelTool([40, -25, 185, 0, 0, 0]),
-        rcommands.MoveRelJoints([0, 0, 0, 0, 0, 1]),
+        rcommands.MoveRelJoints([0, 0, 0, 0, 0, 1.5]),
     )
 
 
@@ -59,13 +59,14 @@ async def ufloop(mcn, pbcomm):
         print('s =', s)
 
         if len(sharpness) > 1 and (sharpness[-1] < sharpness[-2]):
-            await mcn.cmdexec(
-                rcommands.SetSpeed(2),
-                rcommands.MoveToolZ(5)
-            )
             break
 
-    await mcn.cmdexec(rcommands.MoveToolZ(-5))
+        await mcn.cmdexec(
+            rcommands.SetSpeed(5),
+            rcommands.MoveToolZ(10)
+        )
+
+    await mcn.cmdexec(rcommands.MoveToolZ(-10))
 
 
 if __name__ == '__main__':
@@ -80,7 +81,7 @@ if __name__ == '__main__':
     loop = asyncio.get_event_loop()
     t0 = loop.time()
 
-    datacap = rprotocol.RobotVisionDataCapture(loop, t0)
+    datacap = rprotocol.RobotVisionDataCapture(loop, t0, verbose=True)
 
     mcn = rprotocol.MasterControlNode(loop, args.rhost, args.rport)
     mcn.set_on_send(datacap.on_send_robot)

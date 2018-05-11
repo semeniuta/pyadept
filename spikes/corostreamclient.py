@@ -5,6 +5,9 @@ Playing with the stream-based MCN client
 import sys
 import os
 sys.path.append(os.getcwd())
+PHD_CODE = os.environ['PHD_CODE']
+sys.path.append(os.path.join(PHD_CODE, 'EPypes'))
+sys.path.append(os.path.join(PHD_CODE, 'EPypes/epypes/protobuf'))
 
 import asyncio
 import itertools
@@ -27,7 +30,7 @@ if __name__ == '__main__':
         rcommands.DirectCommand('movehome'),
         rcommands.DirectCommand('break'),
         rcommands.MoveRelJoints([-90, 60, 30, -90, 0, 0]),
-        rcommands.SetSpeed(5),
+        #rcommands.SetSpeed(5),
         rcommands.MoveRelTool([40, -25, 185, 0, 0, 0]),
         rcommands.MoveRelJoints([0, 0, 0, 0, 0, 1.5]),
 

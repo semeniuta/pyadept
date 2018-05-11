@@ -86,6 +86,7 @@ if __name__ == '__main__':
             req_event = Event()
             req_event.ParseFromString(req_event_bytes)
             pipe.set_attr('req_event', req_event)
+            print(req_event)
 
             print('Grabbing the image')
             t_grab_0= time.perf_counter()
@@ -100,6 +101,7 @@ if __name__ == '__main__':
             pipe.set_attr('timestamps', timestamps)
 
             im = cv2.cvtColor( images_fxis[0], cv2.COLOR_BGR2GRAY )
+            cv2.imwrite("last_image.jpg", im)
             q_images.put(im)
 
         except KeyboardInterrupt as e:
