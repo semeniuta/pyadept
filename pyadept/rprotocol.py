@@ -240,6 +240,7 @@ class RobotVisionDataCapture(object):
         t = self.current_time()
 
         self._log_robot[cmd_id] = {
+            'command': cmd,
             'data': cmd_data,
             't_send': t,
             'count': self._robot_count
@@ -299,6 +300,11 @@ class RobotVisionDataCapture(object):
 
         df_robot = pd.DataFrame.from_dict(self._log_robot, orient='index')
         df_vision = pd.DataFrame.from_dict(self._log_vision, orient='index')
+
+        for df in (df_robot, df_vision):
+            df['id'] = df.index
+            df.set_index('count', inplace=True)
+            df.sort_index(inplace=True)
 
         return df_robot, df_vision
 
