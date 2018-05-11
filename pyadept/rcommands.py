@@ -14,7 +14,7 @@ def create_motion_command(template, vec, break_move=True):
     if break_move:
         return cmd_bytes, BREAK_CMD
 
-    return cmd_bytes
+    return cmd_bytes,
 
 
 class RobotCommand(object):
