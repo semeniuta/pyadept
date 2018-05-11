@@ -22,6 +22,13 @@ class RobotCommand(object):
     def get_bytes(self):
         return DELIMITER,
 
+    def __repr__(self):
+        class_name = self.__class__.__name__
+        return '{}[{}]'.format(class_name, self._repr_args())
+
+    def _repr_args(self):
+        return ''
+
 
 class DirectCommand(RobotCommand):
 
@@ -31,6 +38,9 @@ class DirectCommand(RobotCommand):
     def get_bytes(self):
         return self._cmd.encode() + DELIMITER,
 
+    def _repr_args(self):
+        return '"{}"'.format(self._cmd)
+
 
 class SetSpeed(RobotCommand):
 
@@ -39,6 +49,9 @@ class SetSpeed(RobotCommand):
 
     def get_bytes(self):
         return 'set_speed:{:d}'.format(self._speed_factor).encode() + DELIMITER,
+
+    def _repr_args(self):
+        return '{:d}'.format(self._speed_factor)
 
 
 class MotionCommand(RobotCommand):
@@ -53,6 +66,10 @@ class MotionCommand(RobotCommand):
 
     def get_bytes(self):
         return create_motion_command(self._template, self._vec, self._break)
+
+    def _repr_args(self):
+        vs = vec_to_str(self._vec)
+        return '{}, break={}'.format(vs, self._break)
 
 
 class MoveToPose(MotionCommand):
@@ -86,5 +103,9 @@ class MoveRelTool(MotionCommand):
 class MoveToolZ(MoveRelTool):
 
     def __init__(self, z, break_move=True):
+        self._z = z
         pose = np.array([0, 0, z, 0, 0, 0])
         super(MoveToolZ, self).__init__(pose, break_move)
+
+    def _repr_args(self):
+        return 'z={:.3f}, break={}'.format(self._z, self._break)
