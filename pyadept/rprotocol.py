@@ -229,32 +229,55 @@ class RobotVisionDataCapture(object):
 
         self._verbose = verbose
 
+        self._robot_count = 0
+        self._vision_count = 0
+
     def current_time(self):
         return self._loop.time() - self._t0
 
     def on_send_robot(self, cmd, cmd_id, cmd_data):
+
         t = self.current_time()
-        self._log_robot[cmd_id] = {'data': cmd_data, 't_send': t}
+
+        self._log_robot[cmd_id] = {
+            'data': cmd_data,
+            't_send': t,
+            'count': self._robot_count
+        }
+        self._robot_count += 1
+
         if self._verbose:
             print('[{:.3f}] send_robot: {}'.format(t, cmd_data))
 
     def on_recv_robot(self, messages, rest):
+
         t = self.current_time()
+
         for msg in messages:
             self._robot_responses.append((msg, t))
+
         if self._verbose:
             print('[{:.3f}] recv_robot: {}'.format(t, messages))
 
     def on_send_vision(self, pb_request):
+
         t = self.current_time()
-        self._log_vision[pb_request.id] = {'time_sent': t}
+
+        self._log_vision[pb_request.id] = {
+            'time_sent': t,
+            'count': self._vision_count
+        }
+        self._vision_count += 1
+
         if self._verbose:
             print('[{:.3f}] send_vision: {}'.format(t, pb_request.id))
 
-
     def on_recv_vision(self, pb_response):
+
         t = self.current_time()
+
         self._vision_responses.append((pb_response, t))
+
         if self._verbose:
             print('[{:.3f}] recv_vision: {}'.format(t, pb_response.id))
 
