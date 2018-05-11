@@ -217,7 +217,7 @@ class ServerClosedWhileReading(Exception):
 
 class RobotVisionDataCapture(object):
 
-    def __init__(self, loop, t0):
+    def __init__(self, loop, t0, verbose=False):
         self._loop = loop
         self._t0 = t0
 
@@ -227,31 +227,42 @@ class RobotVisionDataCapture(object):
         self._robot_responses = []
         self._vision_responses = []
 
+        self._verbose = verbose
+
     def current_time(self):
         return self._loop.time() - self._t0
 
     def on_send_robot(self, cmd, cmd_id, cmd_data):
         t = self.current_time()
         self._log_robot[cmd_id] = {'data': cmd_data, 't_send': t}
+        if self._verbose:
+            print('[{:.3f}] send_robot: {}'.format(t, cmd_data))
 
     def on_recv_robot(self, messages, rest):
         t = self.current_time()
         for msg in messages:
             self._robot_responses.append((msg, t))
+        if self._verbose:
+            print('[{:.3f}] recv_robot: {}'.format(t, messages))
 
     def on_send_vision(self, pb_request):
         t = self.current_time()
         self._log_vision[pb_request.id] = {'time_sent': t}
+        if self._verbose:
+            print('[{:.3f}] send_vision: {}'.format(t, pb_request.id))
+
 
     def on_recv_vision(self, pb_response):
         t = self.current_time()
         self._vision_responses.append((pb_response, t))
+        if self._verbose:
+            print('[{:.3f}] recv_vision: {}'.format(t, pb_response.id))
 
     def prepare_data(self):
 
         for msg, t in self._robot_responses:
             msg_id, status, timestamps, tail = interpret_robot_response(msg)
-            robot_t0, robot_t1 = (float(el) for el in timestamps.split(b','))
+            robot_t0, robot_t1 = tuple(float(el) for el in timestamps.split(b','))
 
             self._log_robot[msg_id].update({
                 'resp_status': status,
@@ -263,8 +274,8 @@ class RobotVisionDataCapture(object):
             resp_id, resp_attrs = interpret_vision_response(pb_resp)
             self._log_vision[resp_id].update(resp_attrs)
 
-        df_robot = pd.DataFrame(self._log_robot)
-        df_vision = pd.DataFrame(self._log_vision)
+        df_robot = pd.DataFrame.from_dict(self._log_robot, orient='index')
+        df_vision = pd.DataFrame.from_dict(self._log_vision, orient='index')
 
         return df_robot, df_vision
 
