@@ -29,8 +29,8 @@ def create_request():
     return req
 
 
-async def init_move(mcn):
-    await mcn.cmdexec(
+async def init_move(rc):
+    await rc.cmdexec(
         rcommands.DirectCommand('movehome'),
         rcommands.DirectCommand('break'),
         rcommands.MoveRelJoints([-90, 60, 30, -90, 0, 0]),
