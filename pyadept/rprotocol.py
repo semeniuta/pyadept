@@ -30,7 +30,7 @@ def add_id(request_id, msg):
     return request_id + b':' + msg
 
 
-class MasterControlNode(object):
+class RobotClient(object):
 
     def __init__(self, loop, r_host, r_port, buffer_size=2048):
 

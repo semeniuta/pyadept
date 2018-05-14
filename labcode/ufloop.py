@@ -40,13 +40,13 @@ async def init_move(mcn):
     )
 
 
-async def ufloop(mcn, pbcomm, delta_z=10, wait_t=0):
+async def ufloop(rc, pbcomm, delta_z=10, wait_t=0):
 
-    await mcn.connect()
+    await rc.connect()
 
     sharpness = []
 
-    await init_move(mcn)
+    await init_move(rc)
 
     while True:
 
@@ -63,12 +63,12 @@ async def ufloop(mcn, pbcomm, delta_z=10, wait_t=0):
         if len(sharpness) > 1 and (sharpness[-1] < sharpness[-2]):
             break
 
-        await mcn.cmdexec(
+        await rc.cmdexec(
             rcommands.SetSpeed(5),
             rcommands.MoveToolZ(delta_z)
         )
 
-    await mcn.cmdexec(rcommands.MoveToolZ(-delta_z))
+    await rc.cmdexec(rcommands.MoveToolZ(-delta_z))
 
 
 if __name__ == '__main__':
@@ -87,15 +87,15 @@ if __name__ == '__main__':
 
     datacap = rprotocol.RobotVisionDataCapture(loop, t0, verbose=True)
 
-    mcn = rprotocol.MasterControlNode(loop, args.rhost, args.rport)
-    mcn.set_on_send(datacap.on_send_robot)
-    mcn.set_on_recv(datacap.on_recv_robot)
+    rc = rprotocol.RobotClient(loop, args.rhost, args.rport)
+    rc.set_on_send(datacap.on_send_robot)
+    rc.set_on_recv(datacap.on_recv_robot)
 
     pscomm = rprotocol.ProtobufCommunicator(args.pub, args.sub, response_type=Event)
     pscomm.set_on_send(datacap.on_send_vision)
     pscomm.set_on_recv(datacap.on_recv_vision)
 
-    ufloop_coro = ufloop(mcn, pscomm, delta_z=args.deltaz, wait_t=args.wait)
+    ufloop_coro = ufloop(rc, pscomm, delta_z=args.deltaz, wait_t=args.wait)
 
     try:
         loop.run_until_complete( ufloop_coro )
