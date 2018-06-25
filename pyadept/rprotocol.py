@@ -8,7 +8,11 @@ from pyadept.rcommands import DELIMITER
 from epypes.protobuf.pbprocess import get_attributes_dict
 
 
-def interpret_robot_response(msg):
+def split_robot_response(msg):
+    """
+    Split byte string from RobotServer into parts corresponding to:
+    message id, status, timestamps, tail (rest of the bytes)
+    """
 
     elements = msg.split(b':')
 
@@ -19,6 +23,10 @@ def interpret_robot_response(msg):
 
 
 def interpret_vision_response(pb_resp):
+    """
+    Interpret a Protobuf response object received from the vision system.
+    Returns response ID and dictionary of attirubtes
+    """
 
     resp_id = pb_resp.id
     resp_attrs = get_attributes_dict(pb_resp.attributes.entries)
@@ -26,15 +34,18 @@ def interpret_vision_response(pb_resp):
     return resp_id, resp_attrs
 
 
-def add_id(request_id, msg):
+def join_id_with_message(request_id, msg):
     return request_id + b':' + msg
 
 
 class RobotClient(object):
+    """
+    AsyncIO-based client of a RobotServer.
+    """
 
     def __init__(self, loop, r_host, r_port, buffer_size=2048):
 
-        self._loop = loop
+        self._loop = loop # FIXME never used
 
         self._host = r_host
         self._port = r_port
@@ -51,21 +62,47 @@ class RobotClient(object):
         self._on_done = None
 
     def set_on_send(self, callback):
+        """
+        Register on_send callback. Should be a callable
+        that accepts (command, command_id, command_data)
+        """
+
         self._on_send = callback
 
     def set_on_recv(self, callback):
+        """
+        Register on_recv callback. Should be a callable
+        that accepts (messages, rest)
+        """
+
         self._on_recv = callback
 
     def set_on_done(self, callback):
+        """
+        Register on_done callback. Should be a callable
+        without arguments
+        """
+
         self._on_done = callback
 
     async def connect(self):
+        """
+        Connect to RobotServer and initialize
+        StreamReader and StreamWriter
+        """
 
         r, w = await asyncio.open_connection(self._host, self._port)
         self._reader = r
         self._writer = w
 
     async def cmdexec(self, *commands, wait_t=0):
+        """
+        Execute one or more commands by sending them to RobotServer.
+        After each command's bytes are sent, responses from reader are
+        received so that every command is acknowledged by the server.
+        Optional wait durating (in seconds) is specified
+        with keyword argument wait_t.
+        """
 
         await send_command_sequence(
             commands,
@@ -83,7 +120,9 @@ class RobotClient(object):
 class ProtobufCommunicator(PubSubPair):
     """
     A subclass of PubSubPair that accepts and returns Protobuf objects
-    (and not raw byte strings as PubSubPair)
+    (and not raw byte strings as PubSubPair).
+    The class overrides send and recv coroutine methods
+    and adds support for on_send and on_recv callbacks.
     """
 
     def __init__(self, pub_address, sub_address, response_type, poll_timeout=0.001):
@@ -122,13 +161,6 @@ class ProtobufCommunicator(PubSubPair):
         return pb_response
 
 
-async def connect_and_execute_commands(host, port, commands, buffer_size=1024, wait_t=None):
-
-    reader, writer = await asyncio.open_connection(host, port)
-    ids = set()
-    await send_command_sequence(commands, reader, writer, ids, buffer_size, wait_t)
-
-
 async def send_command_sequence(
     commands,
     reader,
@@ -142,7 +174,7 @@ async def send_command_sequence(
 ):
     """
     Execute a sequnces of commands by sending the correspodning byte strings
-    using the supplied AsyncIO writer. After each command's bytes are sent,
+    using the supplied AsyncIO StreamWriter. After each command's bytes are sent,
     responses from reader are received so that every command is acknowledged
     by the server.
 
@@ -167,11 +199,14 @@ async def send_command_sequence(
 
 
 async def send_command(command, writer, ids_set, on_send=None):
+    """
+    Send a single command's bytes using the supplied StreamWriter
+    """
 
     for cmd_bytes in command.get_bytes():
 
         cmd_id = generate_id_bytes()
-        cmd_data = add_id(cmd_id, cmd_bytes)
+        cmd_data = join_id_with_message(cmd_id, cmd_bytes)
 
         writer.write(cmd_data)
         ids_set.add(cmd_id)
@@ -181,6 +216,10 @@ async def send_command(command, writer, ids_set, on_send=None):
 
 
 async def read_all_responses(reader, ids_set, buffer_size=1024, on_recv=None, on_done=None):
+    """
+    Read all responses corresponding to IDs in ids_set
+    using the supplied StreamReader
+    """
 
     memory = b''
 
@@ -201,7 +240,7 @@ async def read_all_responses(reader, ids_set, buffer_size=1024, on_recv=None, on
 
         if messages is not None:
             for msg in messages:
-                msg_id, status, timestamps, tail = interpret_robot_response(msg)
+                msg_id, status, timestamps, tail = split_robot_response(msg)
                 ids_set.remove(msg_id)
 
         if rest is not None:
@@ -216,6 +255,19 @@ class ServerClosedWhileReading(Exception):
 
 
 class RobotVisionDataCapture(object):
+    """
+    The class providing data capture functionality
+    when communicating with a vision system.
+
+    on_send_robot and on_recv_robot are handed to
+    a RobotClient as callbacks.
+    on_send_vision and on_recv_vision are handed to
+    a ProtobufCommunicator as callbacks.
+
+    After the session is over, the prepare_data method is
+    invoked to return Pandas dataframes
+    with robot and vision logs.
+    """
 
     def __init__(self, loop, t0, verbose=False):
         self._loop = loop
@@ -285,7 +337,7 @@ class RobotVisionDataCapture(object):
     def prepare_data(self):
 
         for msg, t in self._robot_responses:
-            msg_id, status, timestamps, tail = interpret_robot_response(msg)
+            msg_id, status, timestamps, tail = split_robot_response(msg)
             robot_t0, robot_t1 = tuple(float(el) for el in timestamps.split(b','))
 
             self._log_robot[msg_id].update({

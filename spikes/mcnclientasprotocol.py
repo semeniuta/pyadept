@@ -8,7 +8,7 @@ import functools
 import itertools
 
 from pyadept.asioutil import GenericProtocol
-from pyadept.rprotocol import generate_id_bytes, add_id, interpret_robot_response
+from pyadept.rprotocol import generate_id_bytes, join_id_with_message, split_robot_response
 from pyadept.strutil import split_data, generate_id_bytes
 from pyadept.rcommands import DELIMITER
 from pyadept import rcommands
@@ -36,7 +36,7 @@ class MCNClientProtocol(GenericProtocol):
             for cmd_bytes in command.get_bytes():
 
                 cmd_id = generate_id_bytes()
-                cmd_data = add_id(cmd_id, cmd_bytes)
+                cmd_data = join_id_with_message(cmd_id, cmd_bytes)
 
                 self._transport.write(cmd_data)
                 self._ids.add(cmd_id)
@@ -52,7 +52,7 @@ class MCNClientProtocol(GenericProtocol):
 
         if messages is not None:
             for msg in messages:
-                msg_id, status, timestamp, tail = interpret_robot_response(msg)
+                msg_id, status, timestamp, tail = split_robot_response(msg)
                 self._ids.remove(msg_id)
                 if len(self._ids) == 0:
                     self._future_session_completed.set_result(True)
