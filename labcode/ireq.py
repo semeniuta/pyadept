@@ -6,14 +6,12 @@ import sys, os
 sys.path.append(os.getcwd())
 PHD_CODE = os.environ['PHD_CODE']
 sys.path.append(os.path.join(PHD_CODE, 'EPypes'))
-sys.path.append(os.path.join(PHD_CODE, 'EPypes/epypes/protobuf'))
 
 import zmq
 import uuid
 
 from epypes.cli import parse_pubsub_args
-from epypes.protobuf.event_pb2 import Event
-from epypes.protobuf.justbytes_pb2 import JustBytes
+from epypes.protobuf.types import Event, JustBytes
 from epypes.protobuf.pbprocess import get_attributes_dict
 
 
