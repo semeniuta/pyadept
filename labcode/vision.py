@@ -8,7 +8,6 @@ import time
 sys.path.append(os.getcwd())
 PHD_CODE = os.environ['PHD_CODE']
 sys.path.append(os.path.join(PHD_CODE, 'EPypes'))
-sys.path.append(os.path.join(PHD_CODE, 'EPypes/epypes/protobuf'))
 sys.path.append(os.path.join(PHD_CODE, 'FxIS/build'))
 sys.path.append(os.path.join(PHD_CODE, 'UntilFocus/untilfocus'))
 
@@ -20,7 +19,7 @@ from epypes.pipeline import FullPipeline
 from epypes.cli import parse_pubsub_args
 from epypes.reactivevision import ReactiveVisionSystem, create_queues, dispatch_images
 from epypes.protobuf.pbprocess import add_attribute, copy_downstream_attributes
-from epypes.protobuf.event_pb2 import Event
+from epypes.protobuf.pbtypes import Event
 
 import ufgraph
 

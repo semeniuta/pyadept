@@ -10,14 +10,13 @@ import asyncio
 sys.path.append(os.getcwd())
 PHD_CODE = os.environ['PHD_CODE']
 sys.path.append(os.path.join(PHD_CODE, 'EPypes'))
-sys.path.append(os.path.join(PHD_CODE, 'EPypes/epypes/protobuf'))
 
 from pyadept import rcommands
 from pyadept import rprotocol
 from pyadept import strutil
 
-from epypes.protobuf.event_pb2 import Event
 from epypes.protobuf.pbprocess import get_attributes_dict
+from epypes.protobuf.pbtypes import Event
 
 
 def create_request():
@@ -109,5 +108,3 @@ if __name__ == '__main__':
 
     df_robot.to_csv('log_robot.csv')
     df_vision.to_csv('log_vision.csv')
-
-
