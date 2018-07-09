@@ -16,10 +16,10 @@ def split_robot_response(msg):
 
     elements = msg.split(b':')
 
-    msg_id, status, timestamps = elements[:3]
-    tail = elements[3:]
+    msg_id, status, timestamps, pose = elements[:4]
+    tail = elements[4:]
 
-    return msg_id, status, timestamps, tail
+    return msg_id, status, timestamps, pose, tail
 
 
 def interpret_vision_response(pb_resp):
@@ -240,7 +240,7 @@ async def read_all_responses(reader, ids_set, buffer_size=1024, on_recv=None, on
 
         if messages is not None:
             for msg in messages:
-                msg_id, status, timestamps, tail = split_robot_response(msg)
+                msg_id, status, timestamps, pose, tail = split_robot_response(msg)
                 ids_set.remove(msg_id)
 
         if rest is not None:
@@ -337,13 +337,20 @@ class RobotVisionDataCapture(object):
     def prepare_data(self):
 
         for msg, t in self._robot_responses:
-            msg_id, status, timestamps, tail = split_robot_response(msg)
+            msg_id, status, timestamps, pose, tail = split_robot_response(msg)
             robot_t0, robot_t1 = tuple(float(el) for el in timestamps.split(b','))
+            pose_vals = tuple(float(el) for el in pose.split(b','))
 
             self._log_robot[msg_id].update({
                 'resp_status': status,
                 'robot_t0': robot_t0,
                 'robot_t1': robot_t1,
+                'x': pose_vals[0],
+                'y': pose_vals[1],
+                'z': pose_vals[2],
+                'yaw': pose_vals[3],
+                'pitch': pose_vals[4],
+                'roll': pose_vals[5],
             })
 
             self._log_robot[msg_id]['t_recv'] = t
@@ -362,4 +369,3 @@ class RobotVisionDataCapture(object):
             df.sort_index(inplace=True)
 
         return df_robot, df_vision
-
