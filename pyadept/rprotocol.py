@@ -25,7 +25,7 @@ def split_robot_response(msg):
 def interpret_vision_response(pb_resp):
     """
     Interpret a Protobuf response object received from the vision system.
-    Returns response ID and dictionary of attirubtes
+    Returns response ID and dictionary of attributes
     """
 
     resp_id = pb_resp.id
