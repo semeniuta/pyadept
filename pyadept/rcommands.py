@@ -86,6 +86,13 @@ class MoveRelWorld(MotionCommand):
         super(MoveRelWorld, self).__init__(template, pose, break_move)
 
 
+class MoveJoints(MotionCommand):
+
+    def __init__(self, jconf, break_move=True):
+        template = 'move_joints:{:s}'
+        super(MoveJoints, self).__init__(template, jconf, break_move)
+
+
 class MoveRelJoints(MotionCommand):
 
     def __init__(self, jconf, break_move=True):
