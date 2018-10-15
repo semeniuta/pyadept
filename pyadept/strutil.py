@@ -1,7 +1,7 @@
-'''
+"""
 Utilities for creation and processing
-of strings and bytes sequences
-'''
+of strings and byte sequences
+"""
 
 import uuid
 

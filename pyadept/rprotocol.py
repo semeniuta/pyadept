@@ -4,8 +4,7 @@ import pandas as pd
 from pyadept.strutil import split_data, generate_id_bytes
 from pyadept.asynczmq import PubSubPair
 from pyadept.rcommands import DELIMITER
-
-from epypes.protobuf.pbprocess import get_attributes_dict
+from pyadept.pbutil import get_attributes_dict
 
 
 def split_robot_response(msg):
