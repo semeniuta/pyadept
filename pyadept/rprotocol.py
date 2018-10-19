@@ -103,17 +103,68 @@ class RobotClient(object):
         with keyword argument wait_t.
         """
 
-        await send_command_sequence(
-            commands,
-            self._reader,
-            self._writer,
-            self._ids,
-            self._buffer_size,
-            wait_t,
-            self._on_send,
-            self._on_recv,
-            self._on_done
-        )
+        for cmd in commands:
+
+            await self._send_command(cmd)
+            await asyncio.sleep(wait_t)
+
+            try:
+                await self._read_all_responses()
+            except ServerClosedWhileReading:
+                self._writer.close()
+                return
+
+        await self._writer.drain()
+
+    async def _send_command(self, command):
+        """
+        Send a single command's bytes using the supplied StreamWriter
+        """
+
+        for cmd_bytes in command.get_bytes():
+
+            cmd_id = generate_id_bytes()
+            cmd_data = join_id_with_message(cmd_id, cmd_bytes)
+
+            self._writer.write(cmd_data)
+            self._ids.add(cmd_id)
+
+            if self._on_send is not None:
+                self._on_send(command, cmd_id, cmd_data)
+
+    async def _read_all_responses(self):
+        """
+        Read all responses corresponding to IDs in ids_set
+        using the supplied StreamReader
+        """
+
+        memory = b''
+
+        while len(self._ids) > 0:
+
+            data = await self._reader.read(self._buffer_size)
+
+            if not data:
+                raise ServerClosedWhileReading
+
+            all_data = memory + data
+            memory = b''
+
+            messages, rest = split_data(all_data, DELIMITER)
+
+            if self._on_recv is not None:
+                self._on_recv(messages, rest)
+
+            if messages is not None:
+                for msg in messages:
+                    msg_id, status, timestamps, pose, tail = split_robot_response(msg)
+                    self._ids.remove(msg_id)
+
+            if rest is not None:
+                memory = rest
+
+        if self._on_done is not None:
+            self._on_done()
 
 
 class ProtobufCommunicator(PubSubPair):
@@ -158,95 +209,6 @@ class ProtobufCommunicator(PubSubPair):
             self._on_recv(pb_response)
 
         return pb_response
-
-
-async def send_command_sequence(
-    commands,
-    reader,
-    writer,
-    ids_set,
-    buffer_size=1024,
-    wait_t=0,
-    on_send=None,
-    on_recv=None,
-    on_done=None
-):
-    """
-    Execute a sequnces of commands by sending the correspodning byte strings
-    using the supplied AsyncIO StreamWriter. After each command's bytes are sent,
-    responses from reader are received so that every command is acknowledged
-    by the server.
-
-    Callback functions with the following signatures:
-    on_send accepts (command, command_id, command_data)
-    on_recv accepts (messages, rest)
-    on_done is called without arguments
-    """
-
-    for cmd in commands:
-
-        await send_command(cmd, writer, ids_set, on_send)
-        await asyncio.sleep(wait_t)
-
-        try:
-            await read_all_responses(reader, ids_set, buffer_size, on_recv, on_done)
-        except ServerClosedWhileReading:
-            writer.close()
-            return
-
-    await writer.drain()
-
-
-async def send_command(command, writer, ids_set, on_send=None):
-    """
-    Send a single command's bytes using the supplied StreamWriter
-    """
-
-    for cmd_bytes in command.get_bytes():
-
-        cmd_id = generate_id_bytes()
-        cmd_data = join_id_with_message(cmd_id, cmd_bytes)
-
-        writer.write(cmd_data)
-        ids_set.add(cmd_id)
-
-        if on_send is not None:
-            on_send(command, cmd_id, cmd_data)
-
-
-async def read_all_responses(reader, ids_set, buffer_size=1024, on_recv=None, on_done=None):
-    """
-    Read all responses corresponding to IDs in ids_set
-    using the supplied StreamReader
-    """
-
-    memory = b''
-
-    while len(ids_set) > 0:
-
-        data = await reader.read(buffer_size)
-
-        if not data:
-            raise ServerClosedWhileReading
-
-        all_data = memory + data
-        memory = b''
-
-        messages, rest = split_data(all_data, DELIMITER)
-
-        if on_recv is not None:
-            on_recv(messages, rest)
-
-        if messages is not None:
-            for msg in messages:
-                msg_id, status, timestamps, pose, tail = split_robot_response(msg)
-                ids_set.remove(msg_id)
-
-        if rest is not None:
-            memory = rest
-
-    if on_done is not None:
-        on_done()
 
 
 class ServerClosedWhileReading(Exception):
