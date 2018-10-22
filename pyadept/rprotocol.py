@@ -42,7 +42,7 @@ class RobotClient(object):
     AsyncIO-based client of a RobotServer.
     """
 
-    def __init__(self, loop, r_host, r_port, buffer_size=2048):
+    def __init__(self, loop, r_host, r_port, buffer_size=2048, wait_t=0):
 
         self._loop = loop # FIXME never used
 
@@ -50,11 +50,10 @@ class RobotClient(object):
         self._port = r_port
 
         self._buffer_size = buffer_size
+        self._wait_t = wait_t
 
         self._reader = None
         self._writer = None
-
-        self._ids = set()
 
         self._on_send = None
         self._on_recv = None
@@ -94,29 +93,29 @@ class RobotClient(object):
         self._reader = r
         self._writer = w
 
-    async def cmdexec(self, *commands, wait_t=0):
+    async def cmdexec(self, *commands):
         """
         Execute one or more commands by sending them to RobotServer.
-        After each command's bytes are sent, responses from reader are
+        After all command's bytes are sent, responses from reader are
         received so that every command is acknowledged by the server.
-        Optional wait durating (in seconds) is specified
-        with keyword argument wait_t.
         """
+
+        ids = set()
 
         for cmd in commands:
 
-            await self._send_command(cmd)
-            await asyncio.sleep(wait_t)
+            await self._send_command(cmd, ids)
+            await asyncio.sleep(self._wait_t)
 
-            try:
-                await self._read_all_responses()
-            except ServerClosedWhileReading:
-                self._writer.close()
-                return
+        try:
+            await self._read_all_responses(ids)
+        except ServerClosedWhileReading:
+            self._writer.close()
+            return
 
         await self._writer.drain()
 
-    async def _send_command(self, command):
+    async def _send_command(self, command, ids):
         """
         Send a single command's bytes using the supplied StreamWriter
         """
@@ -127,20 +126,20 @@ class RobotClient(object):
             cmd_data = join_id_with_message(cmd_id, cmd_bytes)
 
             self._writer.write(cmd_data)
-            self._ids.add(cmd_id)
+            ids.add(cmd_id)
 
             if self._on_send is not None:
                 self._on_send(command, cmd_id, cmd_data)
 
-    async def _read_all_responses(self):
+    async def _read_all_responses(self, ids):
         """
-        Read all responses corresponding to IDs in ids_set
+        Read all responses corresponding to IDs in the ids set
         using the supplied StreamReader
         """
 
         memory = b''
 
-        while len(self._ids) > 0:
+        while len(ids) > 0:
 
             data = await self._reader.read(self._buffer_size)
 
@@ -158,7 +157,7 @@ class RobotClient(object):
             if messages is not None:
                 for msg in messages:
                     msg_id, status, timestamps, pose, tail = split_robot_response(msg)
-                    self._ids.remove(msg_id)
+                    ids.remove(msg_id)
 
             if rest is not None:
                 memory = rest
