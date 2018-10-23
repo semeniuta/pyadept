@@ -6,6 +6,8 @@ from pyadept.asynczmq import PubSubPair
 from pyadept.rcommands import DELIMITER
 from pyadept.pbutil import get_attributes_dict
 
+SERVER_BUFFER_SIZE = 2048
+
 
 def split_robot_response(msg):
     """
@@ -101,35 +103,42 @@ class RobotClient(object):
         """
 
         ids = set()
+        n_bytes_sent = 0
 
         for cmd in commands:
 
-            await self._send_command(cmd, ids)
+            for cmd_bytes in cmd.get_bytes():
+
+                cmd_id = generate_id_bytes()
+                cmd_data = join_id_with_message(cmd_id, cmd_bytes)
+                data_len = len(cmd_data)
+
+                if n_bytes_sent + data_len <= SERVER_BUFFER_SIZE:
+
+                    print('Sending a message. Current buffer size: {}'.format(n_bytes_sent))
+                    
+                    self._writer.write(cmd_data)
+                    
+                    ids.add(cmd_id)
+                    n_bytes_sent += data_len
+                    
+                    if self._on_send is not None:
+                        self._on_send(cmd, cmd_id, cmd_data)
+                
+                else:
+
+                    print('Waiting for responses...')
+
+                    try:
+                        await self._read_all_responses(ids)
+                        n_bytes_sent = 0
+                    except ServerClosedWhileReading:
+                        self._writer.close()
+                        return
+            
             await asyncio.sleep(self._wait_t)
-
-        try:
-            await self._read_all_responses(ids)
-        except ServerClosedWhileReading:
-            self._writer.close()
-            return
-
+        
         await self._writer.drain()
-
-    async def _send_command(self, command, ids):
-        """
-        Send a single command's bytes using the supplied StreamWriter
-        """
-
-        for cmd_bytes in command.get_bytes():
-
-            cmd_id = generate_id_bytes()
-            cmd_data = join_id_with_message(cmd_id, cmd_bytes)
-
-            self._writer.write(cmd_data)
-            ids.add(cmd_id)
-
-            if self._on_send is not None:
-                self._on_send(command, cmd_id, cmd_data)
 
     async def _read_all_responses(self, ids):
         """
