@@ -3,7 +3,7 @@ import pandas as pd
 
 from pyadept.strutil import split_data, generate_id_bytes
 from pyadept.asynczmq import PubSubPair
-from pyadept.rcommands import DELIMITER
+from pyadept import rcommands
 from pyadept.pbutil import get_attributes_dict
 
 SERVER_BUFFER_SIZE = 2048
@@ -44,7 +44,7 @@ class RobotClient(object):
     AsyncIO-based client of a RobotServer.
     """
 
-    def __init__(self, loop, r_host, r_port, buffer_size=2048):
+    def __init__(self, loop, r_host, r_port, buffer_size=2048, wait_t=0):
 
         self._loop = loop # FIXME never used
 
@@ -52,6 +52,7 @@ class RobotClient(object):
         self._port = r_port
 
         self._buffer_size = buffer_size
+        self._wait_t = wait_t
 
         self._reader = None
         self._writer = None
@@ -96,7 +97,7 @@ class RobotClient(object):
         self._reader = r
         self._writer = w
 
-    async def cmdexec(self, *commands, wait_t=0):
+    async def cmdexec(self, *commands):
         """
         Execute one or more commands by sending them to RobotServer.
         After each command's bytes are sent, responses from reader are
@@ -108,7 +109,7 @@ class RobotClient(object):
         for cmd in commands:
 
             await self._send_command(cmd)
-            await asyncio.sleep(wait_t)
+            await asyncio.sleep(self._wait_t)
 
             try:
                 await self._read_all_responses()
@@ -117,6 +118,11 @@ class RobotClient(object):
                 return
 
         await self._writer.drain()
+
+    async def cmdexec_joined(self, *commands):
+
+        jc = rcommands.JoinedCommand(commands)
+        await self.cmdexec(jc)
 
     async def _send_command(self, command):
         """
@@ -152,7 +158,7 @@ class RobotClient(object):
             all_data = memory + data
             memory = b''
 
-            messages, rest = split_data(all_data, DELIMITER)
+            messages, rest = split_data(all_data, rcommands.DELIMITER)
 
             if self._on_recv is not None:
                 self._on_recv(messages, rest)
@@ -289,7 +295,7 @@ class NewRobotClient(object):
             all_data = memory + data
             memory = b''
 
-            messages, rest = split_data(all_data, DELIMITER)
+            messages, rest = split_data(all_data, rcommands.DELIMITER)
 
             if self._on_recv is not None:
                 self._on_recv(messages, rest)
