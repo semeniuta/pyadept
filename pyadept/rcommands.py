@@ -5,6 +5,10 @@ DELIMITER = b'\r\n'
 BREAK_CMD = b'break' + DELIMITER
 
 
+def join_commands(*commands):
+    return JoinedCommand(commands)
+
+
 def create_motion_command(template, vec, break_move=True):
 
     vec_bytes = vec_to_str(vec)
@@ -28,6 +32,28 @@ class RobotCommand(object):
 
     def _repr_args(self):
         return ''
+
+    def __len__(self):
+        return sum((len(msg)for msg in self.get_bytes()))
+         
+
+
+class JoinedCommand(RobotCommand):
+
+    def __init__(self, commands):
+
+        messages = tuple()
+        for cmd in commands:
+            messages += cmd.get_bytes()
+
+        self._messages = messages
+        self._commands_str = ','.join((str(cmd) for cmd in commands))
+
+    def get_bytes(self):
+        return self._messages
+
+    def _repr_args(self):
+        return self._commands_str
 
 
 class DirectCommand(RobotCommand):
