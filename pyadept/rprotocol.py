@@ -106,18 +106,22 @@ class RobotClient(object):
         with keyword argument wait_t.
         """
 
+        responses = None
+
         for cmd in commands:
 
             await self._send_command(cmd)
             await asyncio.sleep(self._wait_t)
 
             try:
-                await self._read_all_responses()
+                responses = await self._read_all_responses()
             except ServerClosedWhileReading:
                 self._writer.close()
                 return
 
         await self._writer.drain()
+
+        return responses
 
     async def cmdexec_joined(self, *commands):
 
@@ -148,6 +152,8 @@ class RobotClient(object):
 
         memory = b''
 
+        responses = dict()
+
         while len(self._ids) > 0:
 
             data = await self._reader.read(self._buffer_size)
@@ -164,15 +170,26 @@ class RobotClient(object):
                 self._on_recv(messages, rest)
 
             if messages is not None:
+
                 for msg in messages:
+
                     msg_id, status, timestamps, pose, tail = split_robot_response(msg)
+
                     self._ids.remove(msg_id)
+
+                    responses[msg_id] = {
+                        'status': status,
+                        'timestamps': timestamps,
+                        'pose': pose
+                    }
 
             if rest is not None:
                 memory = rest
 
         if self._on_done is not None:
             self._on_done()
+
+        return responses
 
 
 class NewRobotClient(object):
