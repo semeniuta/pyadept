@@ -46,7 +46,7 @@ class RobotClient(object):
 
     def __init__(self, loop, r_host, r_port, buffer_size=2048, wait_t=0):
 
-        self._loop = loop # FIXME never used
+        self._loop = loop
 
         self._host = r_host
         self._port = r_port
@@ -93,7 +93,7 @@ class RobotClient(object):
         StreamReader and StreamWriter
         """
 
-        r, w = await asyncio.open_connection(self._host, self._port)
+        r, w = await asyncio.open_connection(self._host, self._port, loop=self._loop)
         self._reader = r
         self._writer = w
 
