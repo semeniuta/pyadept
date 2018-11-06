@@ -63,6 +63,8 @@ class RobotClient(object):
         self._on_recv = None
         self._on_done = None
 
+        self._n_conn_attempts_on_timeout = 3
+
     def set_on_send(self, callback):
         """
         Register on_send callback. Should be a callable
@@ -93,9 +95,18 @@ class RobotClient(object):
         StreamReader and StreamWriter
         """
 
-        r, w = await asyncio.open_connection(self._host, self._port, loop=self._loop)
-        self._reader = r
-        self._writer = w
+        try:
+
+            r, w = await asyncio.open_connection(self._host, self._port, loop=self._loop)
+            self._reader = r
+            self._writer = w
+
+        except TimeoutError:
+
+            self._n_conn_attempts_on_timeout -= 1
+            print('[TimeoutError] Reconnecting (attempts remaining: {})'.format(self._n_conn_attempts_on_timeout))
+
+            await self.connect()
 
     async def cmdexec(self, *commands):
         """
