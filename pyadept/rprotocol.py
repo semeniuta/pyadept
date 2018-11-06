@@ -110,11 +110,10 @@ class RobotClient(object):
 
         for cmd in commands:
 
-            await self._send_command(cmd)
-            await asyncio.sleep(self._wait_t)
-
             try:
 
+                await self._send_command(cmd)
+                await asyncio.sleep(self._wait_t)
                 responses = await self._read_all_responses()
 
             except ServerClosedWhileReading:
@@ -124,10 +123,13 @@ class RobotClient(object):
 
             except ConnectionResetError:
 
-                print('Reconnecting and sending again')
+                self._ids.clear()
+
+                print('[ConnectionResetError] Reconnecting and sending again')
                 self._writer.close()
                 await self.connect()
                 responses = await self.cmdexec(*commands)
+
                 return responses
 
         await self._writer.drain()
