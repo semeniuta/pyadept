@@ -150,7 +150,9 @@ class RobotClient(object):
     async def cmdexec_joined(self, *commands):
 
         jc = rcommands.JoinedCommand(commands)
-        await self.cmdexec(jc)
+        responses = await self.cmdexec(jc)
+
+        return responses
 
     async def _send_command(self, command):
         """
@@ -174,9 +176,12 @@ class RobotClient(object):
         using the supplied StreamReader
         """
 
+        def parse_tuple(bstring):
+            return tuple(float(el) for el in bstring.split(b','))
+
         memory = b''
 
-        responses = dict()
+        responses = []
 
         while len(self._ids) > 0:
 
@@ -201,11 +206,14 @@ class RobotClient(object):
 
                     self._ids.remove(msg_id)
 
-                    responses[msg_id] = {
+                    resp = {
+                        'id': msg_id,
                         'status': status,
-                        'timestamps': timestamps,
-                        'pose': pose
+                        'timestamps': parse_tuple(timestamps),
+                        'pose': parse_tuple(pose)
                     }
+
+                    responses.append(resp)
 
             if rest is not None:
                 memory = rest
