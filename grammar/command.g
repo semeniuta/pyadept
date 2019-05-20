@@ -3,7 +3,7 @@
 root ::= command_chain
 command_chain ::= command+
 command ::= motion_command | break_command | air_command | speed_command
-speed_command ::= "set_speed" ":" digit
+speed_command ::= "set_speed" ":" (digit | digit digit | digit digit digit) // speed factor range: 0-100
 air_command ::= ('enable_air' | 'disable_air') delimiter
 break_command ::= "break" delimiter
 motion_command ::= motion_command_name ":" location delimiter
