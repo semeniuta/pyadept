@@ -12,7 +12,7 @@ The intended workflow is based on treating the robot controller as a service. Th
 
 ## Abstractions
 
-Robot commands are defined as classes in the `pyadept.rcommands` module. They construct immutable instances providing the functionality of correct generation of the corresponding byte strings via the the `get_bytes` method. It returns a tuple of byte strings, each finalized with the delimiter sequence `"\r\n"`.
+Robot commands are defined as classes in the `pyadept.rcommands` module. They construct immutable instances providing the functionality of correct generation of the corresponding messages via the the `get_messages` method. It returns a tuple of byte strings, each finalized with the delimiter sequence `"\r\n"`.
 
 The `pyadept.rprotocol` module consists of classes, functions and coroutines realizing the communication logic of a `pyadept`-baseds program, as well as tools for data capture during system operation. 
 

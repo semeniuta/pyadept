@@ -23,7 +23,7 @@ def create_motion_command(template, vec, break_move=True):
 
 class RobotCommand(object):
 
-    def get_bytes(self):
+    def get_messages(self):
         return DELIMITER,
 
     def __repr__(self):
@@ -34,7 +34,7 @@ class RobotCommand(object):
         return ''
 
     def __len__(self):
-        return sum((len(msg)for msg in self.get_bytes()))
+        return sum((len(msg) for msg in self.get_messages()))
          
 
 
@@ -44,12 +44,12 @@ class JoinedCommand(RobotCommand):
 
         messages = tuple()
         for cmd in commands:
-            messages += cmd.get_bytes()
+            messages += cmd.get_messages()
 
         self._messages = messages
         self._commands_str = ','.join((str(cmd) for cmd in commands))
 
-    def get_bytes(self):
+    def get_messages(self):
         return self._messages
 
     def _repr_args(self):
@@ -61,7 +61,7 @@ class DirectCommand(RobotCommand):
     def __init__(self, cmd):
         self._cmd = cmd
 
-    def get_bytes(self):
+    def get_messages(self):
         return self._cmd.encode() + DELIMITER,
 
     def _repr_args(self):
@@ -73,7 +73,7 @@ class SetSpeed(RobotCommand):
     def __init__(self, speed_factor):
         self._speed_factor = speed_factor
 
-    def get_bytes(self):
+    def get_messages(self):
         return 'set_speed:{:d}'.format(self._speed_factor).encode() + DELIMITER,
 
     def _repr_args(self):
@@ -90,7 +90,7 @@ class MotionCommand(RobotCommand):
         self._vec = vec
         self._break = break_move
 
-    def get_bytes(self):
+    def get_messages(self):
         return create_motion_command(self._template, self._vec, self._break)
 
     def _repr_args(self):

@@ -33,7 +33,7 @@ class MCNClientProtocol(GenericProtocol):
 
         for command in self._commands:
 
-            for cmd_bytes in command.get_bytes():
+            for cmd_bytes in command.get_messages():
 
                 cmd_id = generate_id_bytes()
                 cmd_data = join_id_with_message(cmd_id, cmd_bytes)
