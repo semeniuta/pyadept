@@ -1,12 +1,12 @@
 // Grammar for Adept server commands
 
-root ::= command_chain
-command_chain ::= command+
-command ::= motion_command | break_command | air_command | speed_command
-speed_command ::= "set_speed" ":" (digit | digit digit | digit digit digit) // speed factor range: 0-100
-air_command ::= ('enable_air' | 'disable_air') delimiter
-break_command ::= "break" delimiter
-motion_command ::= motion_command_name ":" location delimiter
+root ::= command_message_chain
+command_message_chain ::= command_message+
+command_message ::= motion_msg | break_msg | air_msg | speed_msg
+speed_msg ::= "set_speed" ":" (digit | digit digit | digit digit digit) // speed factor range: 0-100
+air_msg ::= ('enable_air' | 'disable_air') delimiter
+break_msg ::= "break" delimiter
+motion_msg ::= motion_command_name ":" location delimiter
 motion_command_name ::= "move_to" | "move_rel_world" | "move_rel_tool" | "move_joints" | "move_rel_joints"
 location ::= real "," real "," real "," real "," real "," real
 real ::= digit+ "." fractional;
