@@ -54,7 +54,7 @@ def socket_send_bytes(socket, buff):
     socket.sendall(buff)
 
 
-def read_messages(socket, delimiter=b'\r\n', buffer_size=2048):
+def read_messages(socket, delimiter=b'\r\n', buffer_size=2048, prefix=b''):
     '''
     Reads data from socket, where sequences of bytes separated by the delimiter
     constitute separate messages. Returns a tuple (messages, rest), where
@@ -72,7 +72,7 @@ def read_messages(socket, delimiter=b'\r\n', buffer_size=2048):
     :return: a tuple of messages and rest of bytes
     '''
 
-    data = socket.recv(buffer_size)
+    data = prefix + socket.recv(buffer_size)
 
     return split_data(data, delimiter)
 
@@ -92,7 +92,7 @@ def read_complete_messages(socket, delimiter=b'\n', buffer_size=2048):
 
     def perform_read(data=b''):
 
-        messages, rest = read_messages(socket, delimiter, buffer_size)
+        messages, rest = read_messages(socket, delimiter, buffer_size, prefix=data)
 
         if messages is None and rest is None:
             return None
