@@ -4,7 +4,7 @@ import argparse
 sys.path.append(os.getcwd())
 
 from pyadept.tcputil import create_server_socket, start_server, read_complete_messages, socket_send_bytes
-from pyadept.rprotocol import DELIMITER
+from pyadept.rcommands import DELIMITER
 
 STOP_REQUEST = b'stop'
 
